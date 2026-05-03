@@ -1,0 +1,2225 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LOZ RPG</title>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700;900&family=Crimson+Pro:ital,wght@0,300;0,400;0,600;1,400&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0a0f;
+    --bg2: #0f0f1a;
+    --bg3: #141428;
+    --card: #12121f;
+    --border: #2a2a4a;
+    --border2: #3a3a6a;
+    --gold: #d4af37;
+    --gold2: #f0c93a;
+    --red: #e74c3c;
+    --green: #2ecc71;
+    --blue: #3498db;
+    --purple: #9b59b6;
+    --cyan: #00ffff;
+    --text: #e8e4d8;
+    --muted: #8a8aaa;
+    --accent: #ff6347;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Crimson Pro', serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    font-size: 16px;
+    line-height: 1.5;
+  }
+
+  /* ── PARTICLES ── */
+  #particles {
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    pointer-events: none; z-index: 0; overflow: hidden;
+  }
+  .particle {
+    position: absolute; border-radius: 50%;
+    animation: float linear infinite;
+    opacity: 0.4;
+  }
+  @keyframes float {
+    0%   { transform: translateY(100vh) rotate(0deg); opacity: 0; }
+    10%  { opacity: 0.4; }
+    90%  { opacity: 0.4; }
+    100% { transform: translateY(-10px) rotate(720deg); opacity: 0; }
+  }
+
+  /* ── HEADER ── */
+  header {
+    position: relative; z-index: 10;
+    background: linear-gradient(180deg, #0a0a0f 0%, rgba(10,10,15,0.8) 100%);
+    border-bottom: 1px solid var(--border2);
+    padding: 12px 16px;
+    display: flex; align-items: center; justify-content: space-between;
+    backdrop-filter: blur(10px);
+  }
+  header h1 {
+    font-family: 'Cinzel Decorative', serif;
+    font-size: clamp(1.1rem, 4vw, 1.8rem);
+    background: linear-gradient(135deg, var(--gold), var(--gold2), #fff8dc);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    letter-spacing: 2px;
+  }
+  .version-badge {
+    background: var(--bg3); border: 1px solid var(--gold);
+    color: var(--gold); font-size: 0.7rem;
+    padding: 2px 8px; border-radius: 20px;
+    font-family: 'Cinzel Decorative', serif;
+  }
+
+  /* ── NAV ── */
+  nav {
+    position: relative; z-index: 10;
+    display: flex; gap: 4px; padding: 8px 16px;
+    background: var(--bg2); border-bottom: 1px solid var(--border);
+    overflow-x: auto; -webkit-overflow-scrolling: touch;
+  }
+  nav button {
+    flex-shrink: 0;
+    background: transparent; border: 1px solid transparent;
+    color: var(--muted); padding: 6px 14px; border-radius: 6px;
+    cursor: pointer; font-family: 'Crimson Pro', serif; font-size: 0.95rem;
+    transition: all 0.2s; white-space: nowrap;
+  }
+  nav button:hover { color: var(--text); border-color: var(--border2); }
+  nav button.active {
+    background: var(--bg3); border-color: var(--gold);
+    color: var(--gold); font-weight: 600;
+  }
+
+  /* ── PAGES ── */
+  .page { display: none; padding: 16px; position: relative; z-index: 10; max-width: 900px; margin: 0 auto; }
+  .page.active { display: block; }
+
+  /* ── CARDS ── */
+  .card {
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: 12px; padding: 16px; margin-bottom: 12px;
+  }
+  .card-title {
+    font-family: 'Cinzel Decorative', serif;
+    font-size: 0.9rem; color: var(--gold); margin-bottom: 12px;
+    letter-spacing: 1px;
+  }
+
+  /* ── SPECIES CARD ── */
+  .species-card {
+    background: var(--card); border-radius: 12px; padding: 20px;
+    border: 2px solid; text-align: center; cursor: pointer;
+    transition: all 0.3s; position: relative; overflow: hidden;
+  }
+  .species-card::before {
+    content: ''; position: absolute; inset: 0;
+    background: radial-gradient(circle at 50% 0%, currentColor 0%, transparent 70%);
+    opacity: 0.05; pointer-events: none;
+  }
+  .species-card:hover { transform: translateY(-3px); box-shadow: 0 8px 24px rgba(0,0,0,0.4); }
+  .species-emoji { font-size: 2.5rem; margin-bottom: 8px; }
+  .species-name { font-family: 'Cinzel Decorative', serif; font-size: 0.85rem; margin-bottom: 4px; }
+  .species-rarity { font-size: 0.75rem; color: var(--muted); margin-bottom: 8px; }
+  .species-stats { font-size: 0.8rem; display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; }
+  .stat-pill {
+    padding: 2px 8px; border-radius: 10px;
+    background: rgba(255,255,255,0.05); border: 1px solid var(--border2);
+  }
+
+  /* ── SPECIES GRID ── */
+  .species-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    gap: 10px; margin-top: 12px;
+  }
+
+  /* ── HP BAR ── */
+  .hp-bar-wrap { margin: 6px 0; }
+  .hp-bar-label { font-size: 0.85rem; color: var(--muted); margin-bottom: 3px; }
+  .hp-bar-outer {
+    height: 14px; background: rgba(255,255,255,0.08);
+    border-radius: 7px; overflow: hidden; border: 1px solid var(--border);
+  }
+  .hp-bar-inner {
+    height: 100%; border-radius: 7px;
+    transition: width 0.5s ease, background 0.3s;
+  }
+  .hp-bar-inner.high { background: linear-gradient(90deg, #27ae60, #2ecc71); }
+  .hp-bar-inner.mid  { background: linear-gradient(90deg, #e67e22, #f39c12); }
+  .hp-bar-inner.low  { background: linear-gradient(90deg, #c0392b, #e74c3c); }
+
+  /* ── FIGHT ARENA ── */
+  .arena {
+    background: linear-gradient(180deg, #0c0c1e 0%, #0a0a14 100%);
+    border: 2px solid var(--border2); border-radius: 16px;
+    padding: 20px; margin-bottom: 12px; position: relative; overflow: hidden;
+  }
+  .arena::before {
+    content: '⚔️'; position: absolute; top: 50%; left: 50%;
+    transform: translate(-50%,-50%); font-size: 4rem;
+    opacity: 0.05; pointer-events: none;
+  }
+  .fighter-row {
+    display: flex; align-items: center; gap: 12px; margin-bottom: 12px;
+  }
+  .fighter-emoji { font-size: 2rem; }
+  .fighter-info { flex: 1; min-width: 0; }
+  .fighter-name {
+    font-family: 'Cinzel Decorative', serif; font-size: 0.8rem;
+    color: var(--gold); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .fighter-hp-text { font-size: 0.85rem; color: var(--muted); }
+  .vs-divider {
+    text-align: center; font-family: 'Cinzel Decorative', serif;
+    font-size: 1.2rem; color: var(--gold); margin: 8px 0;
+    text-shadow: 0 0 20px var(--gold);
+  }
+
+  /* ── COMBAT LOG ── */
+  .combat-log {
+    background: rgba(0,0,0,0.3); border: 1px solid var(--border);
+    border-radius: 8px; padding: 10px; margin: 10px 0;
+    max-height: 180px; overflow-y: auto; font-size: 0.85rem;
+  }
+  .log-line {
+    padding: 3px 0; border-bottom: 1px solid rgba(255,255,255,0.04);
+    line-height: 1.4;
+  }
+  .log-line:last-child { border-bottom: none; }
+  .log-line.new { animation: flashLine 0.4s ease; }
+  @keyframes flashLine { from { background: rgba(212,175,55,0.15); } to { background: transparent; } }
+
+  /* ── STATUS BUFFS ── */
+  .buff-row {
+    display: flex; flex-wrap: wrap; gap: 4px; margin-top: 4px;
+  }
+  .buff-tag {
+    font-size: 0.7rem; padding: 2px 6px; border-radius: 4px;
+    border: 1px solid; background: rgba(0,0,0,0.4);
+  }
+
+  /* ── BUTTONS ── */
+  .btn {
+    display: inline-flex; align-items: center; justify-content: center;
+    gap: 6px; padding: 10px 18px; border-radius: 8px; border: none;
+    cursor: pointer; font-family: 'Crimson Pro', serif; font-size: 1rem;
+    font-weight: 600; transition: all 0.2s; text-decoration: none;
+    white-space: nowrap;
+  }
+  .btn:disabled { opacity: 0.4; cursor: not-allowed; transform: none !important; }
+  .btn:not(:disabled):hover { transform: translateY(-2px); filter: brightness(1.1); }
+  .btn:not(:disabled):active { transform: translateY(0); }
+  .btn-red { background: linear-gradient(135deg, #c0392b, #e74c3c); color: white; box-shadow: 0 4px 12px rgba(231,76,60,0.3); }
+  .btn-green { background: linear-gradient(135deg, #1e8449, #2ecc71); color: white; box-shadow: 0 4px 12px rgba(46,204,113,0.3); }
+  .btn-gold { background: linear-gradient(135deg, #b8860b, #d4af37); color: #0a0a0f; box-shadow: 0 4px 12px rgba(212,175,55,0.3); }
+  .btn-blue { background: linear-gradient(135deg, #1a5276, #3498db); color: white; box-shadow: 0 4px 12px rgba(52,152,219,0.3); }
+  .btn-gray { background: linear-gradient(135deg, #2c3e50, #34495e); color: white; }
+  .btn-sm { padding: 6px 12px; font-size: 0.85rem; }
+  .btn-lg { padding: 14px 28px; font-size: 1.1rem; }
+  .btn-full { width: 100%; }
+
+  /* ── FIGHT BUTTONS ── */
+  .fight-actions {
+    display: grid; grid-template-columns: 1fr 1fr;
+    gap: 8px; margin-top: 12px;
+  }
+  .fight-actions .btn { padding: 12px 8px; font-size: 0.9rem; }
+  @media (max-width: 480px) {
+    .fight-actions { grid-template-columns: 1fr 1fr; }
+  }
+
+  /* ── CHOICE ACTIONS ── */
+  .choice-actions {
+    display: flex; gap: 8px; margin-top: 12px; flex-wrap: wrap;
+  }
+  .choice-actions .btn { flex: 1; min-width: 0; }
+
+  /* ── ROLL ANIMATION ── */
+  @keyframes spinIn {
+    0%   { transform: scale(0) rotate(-180deg); opacity: 0; }
+    70%  { transform: scale(1.1) rotate(5deg); }
+    100% { transform: scale(1) rotate(0deg); opacity: 1; }
+  }
+  .roll-result {
+    text-align: center; padding: 30px 20px;
+  }
+  .roll-result .big-emoji {
+    font-size: 5rem; display: block; margin-bottom: 12px;
+    animation: spinIn 0.7s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+  }
+  .roll-result .roll-name {
+    font-family: 'Cinzel Decorative', serif; font-size: 1.3rem;
+    margin-bottom: 8px; animation: spinIn 0.7s 0.1s both;
+  }
+  .roll-result .roll-chance {
+    color: var(--muted); animation: spinIn 0.5s 0.2s both;
+  }
+
+  /* ── TABS ── */
+  .tabs { display: flex; gap: 4px; margin-bottom: 12px; flex-wrap: wrap; }
+  .tab {
+    padding: 6px 14px; border-radius: 6px; border: 1px solid var(--border);
+    background: transparent; color: var(--muted); cursor: pointer;
+    font-family: 'Crimson Pro', serif; font-size: 0.9rem; transition: all 0.2s;
+  }
+  .tab.active { background: var(--bg3); border-color: var(--gold); color: var(--gold); }
+
+  /* ── MODAL ── */
+  .modal-overlay {
+    position: fixed; inset: 0; background: rgba(0,0,0,0.85);
+    z-index: 100; display: flex; align-items: center; justify-content: center;
+    padding: 16px; backdrop-filter: blur(4px);
+  }
+  .modal-overlay.hidden { display: none; }
+  .modal {
+    background: var(--card); border: 2px solid var(--border2);
+    border-radius: 16px; padding: 24px; max-width: 500px; width: 100%;
+    max-height: 85vh; overflow-y: auto;
+    animation: modalIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+  @keyframes modalIn {
+    from { transform: scale(0.8); opacity: 0; }
+    to   { transform: scale(1); opacity: 1; }
+  }
+  .modal-header {
+    display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px;
+  }
+  .modal-title { font-family: 'Cinzel Decorative', serif; font-size: 1rem; color: var(--gold); }
+  .modal-close { background: none; border: none; color: var(--muted); font-size: 1.2rem; cursor: pointer; }
+
+  /* ── LEADERBOARD ── */
+  .lb-row {
+    display: flex; align-items: center; gap: 12px; padding: 10px 0;
+    border-bottom: 1px solid var(--border);
+  }
+  .lb-rank { width: 28px; text-align: center; font-family: 'Cinzel Decorative', serif; color: var(--gold); }
+  .lb-name { flex: 1; }
+  .lb-wins { color: var(--gold); font-weight: 600; }
+
+  /* ── PATCH NOTES ── */
+  .patch-version {
+    font-family: 'Cinzel Decorative', serif; font-size: 0.9rem;
+    color: var(--gold); margin-bottom: 4px;
+  }
+  .patch-date { color: var(--muted); font-size: 0.8rem; margin-bottom: 8px; }
+  .patch-changes li { margin: 4px 0; font-size: 0.9rem; padding-left: 4px; }
+
+  /* ── STATS ── */
+  .stat-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+  .stat-box { background: var(--bg3); border-radius: 8px; padding: 10px; text-align: center; }
+  .stat-num { font-family: 'Cinzel Decorative', serif; font-size: 1.4rem; color: var(--gold); }
+  .stat-lbl { font-size: 0.75rem; color: var(--muted); }
+
+  /* ── DIFFICULTY GRID ── */
+  .diff-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .diff-card {
+    background: var(--bg3); border: 2px solid var(--border);
+    border-radius: 10px; padding: 14px; cursor: pointer;
+    transition: all 0.2s; text-align: center;
+  }
+  .diff-card:hover { border-color: var(--gold); transform: translateY(-2px); }
+  .diff-emoji { font-size: 2rem; margin-bottom: 6px; }
+  .diff-name { font-family: 'Cinzel Decorative', serif; font-size: 0.8rem; color: var(--gold); }
+  .diff-desc { font-size: 0.75rem; color: var(--muted); margin-top: 4px; }
+
+  /* ── TOAST ── */
+  #toast {
+    position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
+    background: var(--bg3); border: 1px solid var(--gold); color: var(--text);
+    padding: 10px 20px; border-radius: 8px; z-index: 200;
+    font-size: 0.9rem; transition: opacity 0.3s;
+    max-width: 90vw; text-align: center;
+  }
+  #toast.hidden { opacity: 0; pointer-events: none; }
+
+  /* ── TURN BANNER ── */
+  .turn-banner {
+    text-align: center; font-family: 'Cinzel Decorative', serif;
+    font-size: 0.85rem; color: var(--gold);
+    padding: 6px; background: rgba(212,175,55,0.1);
+    border-radius: 6px; margin-bottom: 8px;
+    border: 1px solid rgba(212,175,55,0.2);
+  }
+  .turn-banner.thinking {
+    color: var(--cyan); border-color: rgba(0,255,255,0.2);
+    background: rgba(0,255,255,0.05);
+    animation: pulse 1s ease-in-out infinite;
+  }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.5} }
+
+  /* ── SPECIES DETAIL ── */
+  .ability-box {
+    background: var(--bg3); border-radius: 8px; padding: 10px; margin: 6px 0;
+    border-left: 3px solid;
+  }
+  .ability-label { font-size: 0.7rem; color: var(--muted); margin-bottom: 2px; text-transform: uppercase; letter-spacing: 1px; }
+  .ability-text { font-size: 0.9rem; }
+
+  /* ── SCROLLBAR ── */
+  ::-webkit-scrollbar { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-track { background: var(--bg2); }
+  ::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 3px; }
+
+  /* ── SECTION TITLE ── */
+  .section-title {
+    font-family: 'Cinzel Decorative', serif; font-size: 1.2rem;
+    color: var(--gold); margin-bottom: 12px;
+    padding-bottom: 8px; border-bottom: 1px solid var(--border);
+  }
+
+  /* ── WIN/LOSS ── */
+  .result-overlay {
+    text-align: center; padding: 30px;
+  }
+  .result-icon { font-size: 4rem; display: block; margin-bottom: 12px; }
+  .result-title {
+    font-family: 'Cinzel Decorative', serif; font-size: 1.3rem;
+    margin-bottom: 8px;
+  }
+  .result-detail { color: var(--muted); margin-bottom: 16px; }
+
+  /* Reroll count */
+  .roll-count {
+    display: inline-flex; align-items: center; gap: 6px;
+    background: var(--bg3); border: 1px solid var(--gold);
+    border-radius: 8px; padding: 6px 12px; margin-bottom: 12px;
+    color: var(--gold); font-family: 'Cinzel Decorative', serif; font-size: 0.85rem;
+  }
+</style>
+</head>
+<body>
+
+<div id="particles"></div>
+
+<header>
+  <h1>⚔️ LOZ RPG</h1>
+  <div style="display:flex;gap:8px;align-items:center">
+    <span class="version-badge">v4.3</span>
+    <span id="rollsDisplay" class="roll-count" style="display:none">🎲 <span id="rollCountNum">0</span> Rolls</span>
+  </div>
+</header>
+
+<nav>
+  <button class="active" onclick="gotoPage('home')">🏠 Home</button>
+  <button onclick="gotoPage('species')">📜 Species</button>
+  <button onclick="gotoPage('fight')">⚔️ PvP Fight</button>
+  <button onclick="gotoPage('botfight')">🤖 Bot Fight</button>
+  <button onclick="gotoPage('profile')">👤 Profile</button>
+  <button onclick="gotoPage('patch')">📋 Patch Notes</button>
+</nav>
+
+<!-- ══════════════════════ HOME ══════════════════════ -->
+<div class="page active" id="page-home">
+  <div id="home-no-species">
+    <h2 class="section-title">Welcome to LOZ RPG</h2>
+    <div class="card">
+      <p style="margin-bottom:12px;font-size:1.05rem">You don't have a species yet! Roll to get one and begin your journey.</p>
+      <button class="btn btn-gold btn-lg btn-full" onclick="doRoll()">🎲 Roll Your Species</button>
+    </div>
+    <div class="card">
+      <div class="card-title">HOW TO PLAY</div>
+      <p style="font-size:0.9rem;color:var(--muted);line-height:1.7">
+        1. Roll a species — rarity determines your stats &amp; abilities<br>
+        2. Fight the AI bot across 4 difficulties to earn wins<br>
+        3. Use Attack, Heal, and ULT in combat to defeat your opponent<br>
+        4. Win fights to earn points and bonus rolls<br>
+        5. Level up to unlock stronger species via Awakening
+      </p>
+    </div>
+  </div>
+
+  <div id="home-has-species" style="display:none">
+    <h2 class="section-title">Your Species</h2>
+    <div class="card" id="homeSpeciesCard" style="text-align:center">
+      <div class="species-emoji" id="homeEmoji" style="font-size:4rem;margin-bottom:8px"></div>
+      <div class="species-name" id="homeName" style="font-size:1.3rem;margin-bottom:4px"></div>
+      <div class="species-rarity" id="homeRarity"></div>
+      <div class="species-stats" id="homeStats" style="justify-content:center;margin:12px 0;gap:12px;font-size:0.9rem"></div>
+      <div id="homePassive" class="ability-box" style="border-color:var(--purple);margin:6px 0;text-align:left"></div>
+      <div id="homeUlt" class="ability-box" style="border-color:var(--gold);text-align:left"></div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px">
+      <button class="btn btn-gold" onclick="doRoll()">🎲 Reroll</button>
+      <button class="btn btn-blue" onclick="gotoPage('botfight')">🤖 Fight Bot</button>
+    </div>
+    <div id="homeAwakeningBox" style="display:none">
+      <div class="card" style="border-color:var(--cyan)">
+        <div class="card-title" style="color:var(--cyan)">⚡ AWAKENING AVAILABLE</div>
+        <p style="font-size:0.9rem;margin-bottom:10px">Your Cyborg has met all awakening requirements! Transform into Mechangel!</p>
+        <button class="btn btn-full" style="background:linear-gradient(135deg,#004d66,var(--cyan));color:#0a0a0f" onclick="doAwakening()">⚡ Awaken → Mechangel</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════ SPECIES COMPENDIUM ══════════════════════ -->
+<div class="page" id="page-species">
+  <h2 class="section-title">Species Compendium</h2>
+  <div class="tabs" id="speciesTabs">
+    <button class="tab active" onclick="filterSpecies('all',this)">All</button>
+    <button class="tab" onclick="filterSpecies('legendary',this)">⭐ Legendary</button>
+    <button class="tab" onclick="filterSpecies('epic',this)">💜 Epic</button>
+    <button class="tab" onclick="filterSpecies('rare',this)">💙 Rare</button>
+    <button class="tab" onclick="filterSpecies('common',this)">⚪ Common</button>
+  </div>
+  <div class="species-grid" id="speciesGrid"></div>
+</div>
+
+<!-- ══════════════════════ PVP FIGHT ══════════════════════ -->
+<div class="page" id="page-fight">
+  <h2 class="section-title">⚔️ PvP Fight</h2>
+  <div id="pvp-setup">
+    <div class="card">
+      <div class="card-title">SELECT OPPONENT SPECIES</div>
+      <p style="font-size:0.85rem;color:var(--muted);margin-bottom:10px">Choose a species for your opponent to simulate a PvP fight</p>
+      <div class="species-grid" id="pvpSpeciesGrid" style="grid-template-columns:repeat(auto-fill,minmax(120px,1fr))"></div>
+    </div>
+  </div>
+  <div id="pvp-arena" style="display:none">
+    <div class="arena" id="pvpArena">
+      <div class="fighter-row">
+        <div class="fighter-emoji" id="pvpP1Emoji"></div>
+        <div class="fighter-info">
+          <div class="fighter-name" id="pvpP1Name"></div>
+          <div class="hp-bar-wrap">
+            <div class="hp-bar-outer"><div class="hp-bar-inner high" id="pvpP1Bar" style="width:100%"></div></div>
+          </div>
+          <div class="fighter-hp-text" id="pvpP1HpText"></div>
+          <div class="buff-row" id="pvpP1Buffs"></div>
+        </div>
+      </div>
+      <div class="vs-divider">— Round <span id="pvpRound">1</span> —</div>
+      <div class="fighter-row">
+        <div class="fighter-emoji" id="pvpP2Emoji"></div>
+        <div class="fighter-info">
+          <div class="fighter-name" id="pvpP2Name"></div>
+          <div class="hp-bar-wrap">
+            <div class="hp-bar-outer"><div class="hp-bar-inner high" id="pvpP2Bar" style="width:100%"></div></div>
+          </div>
+          <div class="fighter-hp-text" id="pvpP2HpText"></div>
+          <div class="buff-row" id="pvpP2Buffs"></div>
+        </div>
+      </div>
+    </div>
+    <div class="turn-banner" id="pvpTurnBanner">Your turn!</div>
+    <div class="combat-log" id="pvpLog"></div>
+    <div class="fight-actions" id="pvpActions">
+      <button class="btn btn-red" onclick="pvpAction('attack')">⚔️ ATTACK</button>
+      <button class="btn btn-green" id="pvpHealBtn" onclick="pvpAction('heal')">💚 HEAL</button>
+      <button class="btn btn-gold" id="pvpUltBtn" onclick="pvpAction('ult')">✨ ULT</button>
+      <button class="btn btn-gray" onclick="pvpAction('forfeit')">🏃 FORFEIT</button>
+    </div>
+    <div class="choice-actions" id="pvpChoiceActions" style="display:none"></div>
+  </div>
+  <div id="pvp-result" style="display:none">
+    <div class="result-overlay" id="pvpResultContent"></div>
+    <button class="btn btn-gold btn-full" onclick="resetPvp()">⚔️ Fight Again</button>
+  </div>
+</div>
+
+<!-- ══════════════════════ BOT FIGHT ══════════════════════ -->
+<div class="page" id="page-botfight">
+  <h2 class="section-title">🤖 Bot Fight</h2>
+  <div id="bot-setup">
+    <div class="card" id="botNoSpecies" style="display:none">
+      <p>You need a species first! <button class="btn btn-gold btn-sm" onclick="gotoPage('home')">Get one →</button></p>
+    </div>
+    <div id="botDiffSelect">
+      <div class="card-title" style="margin-bottom:8px">SELECT DIFFICULTY</div>
+      <div class="diff-grid" id="diffGrid"></div>
+    </div>
+  </div>
+  <div id="bot-arena" style="display:none">
+    <div class="arena">
+      <div class="fighter-row">
+        <div class="fighter-emoji" id="botP1Emoji"></div>
+        <div class="fighter-info">
+          <div class="fighter-name" id="botP1Name">YOU</div>
+          <div class="hp-bar-wrap">
+            <div class="hp-bar-outer"><div class="hp-bar-inner high" id="botP1Bar" style="width:100%"></div></div>
+          </div>
+          <div class="fighter-hp-text" id="botP1HpText"></div>
+          <div class="buff-row" id="botP1Buffs"></div>
+        </div>
+      </div>
+      <div class="vs-divider">— Round <span id="botRound">1</span> —</div>
+      <div class="fighter-row">
+        <div class="fighter-emoji" id="botP2Emoji"></div>
+        <div class="fighter-info">
+          <div class="fighter-name" id="botP2Name"></div>
+          <div class="hp-bar-wrap">
+            <div class="hp-bar-outer"><div class="hp-bar-inner high" id="botP2Bar" style="width:100%"></div></div>
+          </div>
+          <div class="fighter-hp-text" id="botP2HpText"></div>
+          <div class="buff-row" id="botP2Buffs"></div>
+        </div>
+      </div>
+    </div>
+    <div class="turn-banner" id="botTurnBanner">Your turn!</div>
+    <div class="combat-log" id="botLog"></div>
+    <div class="fight-actions" id="botActions">
+      <button class="btn btn-red" onclick="botAction('attack')">⚔️ ATTACK</button>
+      <button class="btn btn-green" id="botHealBtn" onclick="botAction('heal')">💚 HEAL</button>
+      <button class="btn btn-gold" id="botUltBtn" onclick="botAction('ult')">✨ ULT</button>
+      <button class="btn btn-gray" onclick="botAction('forfeit')">🏃 FORFEIT</button>
+    </div>
+    <div class="choice-actions" id="botChoiceActions" style="display:none"></div>
+  </div>
+  <div id="bot-result" style="display:none">
+    <div class="result-overlay" id="botResultContent"></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px">
+      <button class="btn btn-gold" onclick="resetBot()">🤖 Fight Again</button>
+      <button class="btn btn-blue" onclick="gotoPage('profile')">👤 Profile</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════ PROFILE ══════════════════════ -->
+<div class="page" id="page-profile">
+  <h2 class="section-title">👤 Profile</h2>
+  <div class="card">
+    <div class="stat-grid" id="profileStats"></div>
+  </div>
+  <div class="card">
+    <div class="card-title">BOT FIGHT STATS</div>
+    <div id="botStatsGrid"></div>
+  </div>
+  <div class="card">
+    <div class="card-title">FIGHT HISTORY</div>
+    <div id="fightHistory"></div>
+  </div>
+  <div class="card" id="reaperQuestCard">
+    <div class="card-title">🌑 REAPER QUEST</div>
+    <div id="reaperQuestContent"></div>
+  </div>
+</div>
+
+<!-- ══════════════════════ PATCH NOTES ══════════════════════ -->
+<div class="page" id="page-patch">
+  <h2 class="section-title">📋 Patch Notes</h2>
+  <div id="patchContent"></div>
+</div>
+
+<!-- ══════════════════════ SPECIES MODAL ══════════════════════ -->
+<div class="modal-overlay hidden" id="speciesModal">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title" id="modalTitle"></div>
+      <button class="modal-close" onclick="closeModal()">✕</button>
+    </div>
+    <div id="modalContent"></div>
+  </div>
+</div>
+
+<!-- ══════════════════════ ROLL MODAL ══════════════════════ -->
+<div class="modal-overlay hidden" id="rollModal">
+  <div class="modal">
+    <div id="rollContent"></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:16px">
+      <button class="btn btn-gold" id="keepBtn" onclick="keepRoll()">✅ Keep</button>
+      <button class="btn btn-gray" id="rerollBtn" onclick="doRoll()">🎲 Reroll</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast" class="hidden"></div>
+
+<script>
+// ══════════════════════════════════════════════════════════════════
+//  CONSTANTS — ported from constants.js
+// ══════════════════════════════════════════════════════════════════
+
+const SPECIES_LIST = [
+  { number:1,  name:"Demi God",   rarity:1,  emoji:"⚡",    chance:"0.5%",  color:"#00b0f0", hp:130, atkMin:22, atkMax:32, healMin:22, healMax:40, ultCooldown:12, tier:"legendary" },
+  { number:2,  name:"Demon Lord", rarity:2,  emoji:"🔥",    chance:"1.0%",  color:"#ff4500", hp:125, atkMin:20, atkMax:28, healMin:20, healMax:35, ultCooldown:10, tier:"legendary" },
+  { number:3,  name:"Demon King", rarity:3,  emoji:"👑😈",  chance:"1.5%",  color:"#ff6347", hp:120, atkMin:17, atkMax:25, healMin:18, healMax:30, ultCooldown:15, tier:"legendary" },
+  { number:4,  name:"Demon",      rarity:8,  emoji:"😈",    chance:"4.0%",  color:"#ff0000", hp:105, atkMin:14, atkMax:20, healMin:12, healMax:22, ultCooldown:4,  tier:"epic" },
+  { number:5,  name:"Oni",        rarity:10, emoji:"👿",    chance:"5.0%",  color:"#8b0000", hp:110, atkMin:16, atkMax:24, healMin:15, healMax:25, ultCooldown:10, tier:"epic" },
+  { number:6,  name:"Orc Lord",   rarity:12, emoji:"👑",    chance:"6.0%",  color:"#ffd700", hp:115, atkMin:15, atkMax:22, healMin:16, healMax:28, ultCooldown:7,  tier:"epic" },
+  { number:7,  name:"Kijin",      rarity:14, emoji:"🎭",    chance:"7.0%",  color:"#9b59b6", hp:100, atkMin:12, atkMax:18, healMin:10, healMax:20, ultCooldown:8,  tier:"rare" },
+  { number:8,  name:"High Orc",   rarity:18, emoji:"⚔️",   chance:"9.0%",  color:"#c0c0c0", hp:105, atkMin:14, atkMax:20, healMin:14, healMax:24, ultCooldown:10, tier:"rare" },
+  { number:9,  name:"Ogre",       rarity:24, emoji:"👹",    chance:"12.0%", color:"#8b4513", hp:110, atkMin:10, atkMax:16, healMin:18, healMax:30, ultCooldown:9,  tier:"rare" },
+  { number:10, name:"Goblin",     rarity:36, emoji:"👺",    chance:"18.0%", color:"#006400", hp:95,  atkMin:8,  atkMax:14, healMin:8,  healMax:16, ultCooldown:6,  tier:"common" },
+  { number:11, name:"Orc",        rarity:44, emoji:"🟢",    chance:"22.0%", color:"#00ff00", hp:100, atkMin:12, atkMax:18, healMin:12, healMax:20, ultCooldown:6,  tier:"common" },
+  { number:12, name:"Angel",      rarity:6,  emoji:"👼",    chance:"3.0%",  color:"#fff700", hp:100, atkMin:15, atkMax:23, healMin:15, healMax:32, ultCooldown:10, tier:"epic" },
+  { number:13, name:"Chimera",    rarity:4,  emoji:"🎭",    chance:"2.2%",  color:"#9b59b6", hp:115, atkMin:16, atkMax:26, healMin:14, healMax:22, ultCooldown:15, tier:"legendary" },
+  { number:14, name:"Cyborg",     rarity:14, emoji:"🤖",    chance:"7.0%",  color:"#00ffff", hp:125, atkMin:12, atkMax:19, healMin:8,  healMax:14, ultCooldown:7,  tier:"rare" },
+  { number:15, name:"Half-Blood", rarity:52, emoji:"🩸",    chance:"26.0%", color:"#8b4513", hp:90,  atkMin:10, atkMax:16, healMin:10, healMax:18, ultCooldown:7,  tier:"common" },
+];
+
+const DRAGON_TYPES = [
+  { type:"Fire",    emoji:"🔥🐉", hp:125, atkMin:22, atkMax:32, healMin:8,  healMax:14, color:"#ff4500", ultCooldown:11, chance:"~0.5%", tier:"legendary" },
+  { type:"Thunder", emoji:"⚡🐉", hp:115, atkMin:24, atkMax:34, healMin:6,  healMax:12, color:"#ffd700", ultCooldown:12, chance:"~0.5%", tier:"legendary" },
+  { type:"Ice",     emoji:"❄️🐉", hp:120, atkMin:18, atkMax:28, healMin:16, healMax:24, color:"#1e90ff", ultCooldown:10, chance:"~0.5%", tier:"legendary" },
+  { type:"Earth",   emoji:"🌍🐉", hp:135, atkMin:16, atkMax:26, healMin:10, healMax:18, color:"#8b4513", ultCooldown:11, chance:"~0.5%", tier:"legendary" },
+];
+
+const SPECIAL_SPECIES = {
+  god:       { name:"God",       emoji:"👑✨", color:"#ffffff", hp:140, atkMin:25, atkMax:35, healMin:25, healMax:45, ultCooldown:12, chance:"—",    tier:"legendary" },
+  reaper:    { name:"Reaper",    emoji:"🌑",   color:"#2f4f4f", hp:110, atkMin:25, atkMax:38, healMin:8,  healMax:16, ultCooldown:12, chance:"Quest", tier:"legendary" },
+  archdemon: { name:"Archdemon", emoji:"👿",   color:"#4a0404", hp:150, atkMin:28, atkMax:40, healMin:15, healMax:25, ultCooldown:10, chance:"—",    tier:"legendary" },
+  mechangel: { name:"Mechangel", emoji:"⚡🤖", color:"#00ffff", hp:140, atkMin:15, atkMax:23, healMin:10, healMax:18, ultCooldown:6,  chance:"Awaken",tier:"legendary" },
+};
+
+const BOT_PERSONALITIES = {
+  easy:       { name:"Baby Bot",    emoji:"🧸", color:"#00ff00", healThreshold:0.2, ultChance:0.1,  reactionDelay:1200, description:"Beep boop... where attack go?" },
+  medium:     { name:"Warrior Bot", emoji:"⚔️", color:"#808080", healThreshold:0.3, ultChance:0.3,  reactionDelay:900,  description:"Calculating optimal moves..." },
+  hard:       { name:"Demon Bot",   emoji:"👹", color:"#0000ff", healThreshold:0.4, ultChance:0.6,  reactionDelay:600,  description:"Your moves are predictable." },
+  impossible: { name:"God Bot",     emoji:"💀", color:"#ff0000", healThreshold:0.5, ultChance:0.9,  reactionDelay:300,  description:"I have already calculated your defeat." },
+};
+
+const BOT_SPECIES_BY_DIFF = {
+  easy:       ["Orc","Goblin","Ogre","Angel"],
+  medium:     ["High Orc","Kijin","Orc Lord","Chimera"],
+  hard:       ["Oni","Demon","Fire Dragon","Thunder Dragon"],
+  impossible: ["Demon King","Demon Lord","Demi God","Ice Dragon","Earth Dragon","God"],
+};
+
+const TYPE_ADV = {
+  "Orc":{"strongAgainst":"Goblin","weakAgainst":"Ogre"},
+  "Goblin":{"strongAgainst":"Ogre","weakAgainst":"Orc"},
+  "Ogre":{"strongAgainst":"Orc","weakAgainst":"Goblin"},
+  "High Orc":{"strongAgainst":"Kijin","weakAgainst":"Oni"},
+  "Kijin":{"strongAgainst":"Oni","weakAgainst":"High Orc"},
+  "Oni":{"strongAgainst":"High Orc","weakAgainst":"Kijin"},
+  "Orc Lord":{"strongAgainst":"Demon","weakAgainst":"Demon King"},
+  "Demon":{"strongAgainst":"Demon King","weakAgainst":"Orc Lord"},
+  "Demon King":{"strongAgainst":"Orc Lord","weakAgainst":"Demon"},
+  "Demon Lord":{"strongAgainst":"Demi God","weakAgainst":"God"},
+  "Demi God":{"strongAgainst":"God","weakAgainst":"Demon Lord"},
+  "Angel":{"strongAgainst":"Demon","weakAgainst":"Demon Lord"},
+  "Fire Dragon":{"strongAgainst":"Ice Dragon","weakAgainst":"Earth Dragon"},
+  "Thunder Dragon":{"strongAgainst":"Ice Dragon","weakAgainst":"Earth Dragon"},
+  "Ice Dragon":{"strongAgainst":"Earth Dragon","weakAgainst":"Fire Dragon"},
+  "Earth Dragon":{"strongAgainst":"Thunder Dragon","weakAgainst":"Ice Dragon"},
+};
+
+const CRIT_RATES = {
+  "Orc":{chance:5,multiplier:2.0},"Goblin":{chance:7,multiplier:1.9},
+  "Ogre":{chance:6,multiplier:1.85},"High Orc":{chance:10,multiplier:2.0},
+  "Kijin":{chance:9,multiplier:1.7},"Orc Lord":{chance:10,multiplier:1.65},
+  "Oni":{chance:11,multiplier:1.6},"Demon":{chance:12,multiplier:1.55},
+  "Demon King":{chance:13,multiplier:1.5},"Demon Lord":{chance:14,multiplier:1.45},
+  "Demi God":{chance:15,multiplier:1.4},"God":{chance:20,multiplier:1.3},
+  "Angel":{chance:12,multiplier:1.6},"Chimera":{chance:10,multiplier:1.7},
+  "Reaper":{chance:15,multiplier:1.5},"Fire Dragon":{chance:10,multiplier:1.7},
+  "Thunder Dragon":{chance:15,multiplier:1.5},"Ice Dragon":{chance:8,multiplier:1.8},
+  "Earth Dragon":{chance:5,multiplier:2.0},"Cyborg":{chance:10,multiplier:1.6},
+  "Half-Blood":{chance:8,multiplier:1.8},"Mechangel":{chance:15,multiplier:1.5},
+  "Archdemon":{chance:18,multiplier:1.6},
+};
+
+const FAIL_CHANCES = {
+  "Orc":0.15,"Goblin":0.14,"Ogre":0.13,"High Orc":0.12,"Kijin":0.11,
+  "Orc Lord":0.10,"Oni":0.09,"Demon":0.08,"Demon King":0.07,"Demon Lord":0.06,
+  "Demi God":0.05,"God":0.04,"Angel":0.08,"Chimera":0.07,"Reaper":0.06,
+  "Fire Dragon":0.07,"Thunder Dragon":0.06,"Ice Dragon":0.08,"Earth Dragon":0.09,
+  "Cyborg":0.08,"Half-Blood":0.12,"Mechangel":0.05,"Archdemon":0.03,
+};
+
+const PATCH_NOTES = [
+  { version:"4.3", date:"2026-03-17", changes:[
+    "⚔️ Miss + Counter system restored — attacks can miss, defenders have 30% chance to counter-strike",
+    "🎭 Chimera ULT overhauled — copies opponent's species ULT directly, no waiting",
+    "🎁 New Gift command — send up to 2 rolls per day",
+    "✨ Awakening Altar — Cyborg can awaken into Mechangel",
+    "🔒 Cannot reroll species while in an active fight",
+    "🤖 Bot fights: auto-resolve in player's favour if bot is stuck for 60 seconds",
+    "🐛 Fixed ULT cooldown — both players' ULT ticks every round",
+  ]},
+  { version:"4.2", date:"2026-03-16", changes:[
+    "🐛 Fixed all 17 combat bugs — passives, burns, possession, Chimera stacks all working",
+    "⚔️ Fight system overhauled — single embed with buttons, no message spam",
+    "🔄 Choice ULTs (Angel, Ice Dragon, Earth Dragon) now swap buttons inline",
+    "📊 HP display updates only after ALL effects fully resolve",
+    "🤖 Bot turn shows thinking indicator during AI delay",
+    "📋 Species list shows full ranked species list with roll chances",
+  ]},
+  { version:"4.1", date:"2026-02-27", changes:[
+    "🐛 Reaper quest progress no longer resets",
+    "⚙️ Constant healing bug fix in progress",
+    "⚙️ ULT turn assignment bug fix in progress",
+  ]},
+  { version:"4.0", date:"2024-04-01", changes:[
+    "✨ Added Chimera species (2.2%) — copies opponent's ULT",
+    "⚖️ Complete species rarity overhaul",
+    "⚖️ Dragon chance: 2.3% → 2.0% | Angel: 3.5% → 3.0%",
+  ]},
+];
+
+// ══════════════════════════════════════════════════════════════════
+//  PASSIVE / ACTIVE DESCRIPTIONS
+// ══════════════════════════════════════════════════════════════════
+
+function getPassive(name) {
+  const p = {
+    "Orc":"Berserker — +5 damage below 30% HP",
+    "Goblin":"Speed Dodge — 10% chance to dodge",
+    "Ogre":"Regeneration — heal 5 HP at start of your turns",
+    "High Orc":"Critical Strike — 10% crit chance → 2× damage",
+    "Kijin":"Shadow Dance — 15% to attack twice",
+    "Orc Lord":"Despair — 15% of opponent's max HP added to every attack",
+    "Oni":"Demonic Resilience — take 10% less damage",
+    "Demon":"Life Steal — heal 20% of damage dealt",
+    "Demon King":"Fear Aura — opponent deals 10% less damage",
+    "Demon Lord":"Burning Aura — 5 burn every turn even on miss",
+    "Demi God":"Divine Shield — 15% damage reduction always",
+    "God":"Divine Retribution — heal 20% HP when opponent misses",
+    "Angel":"Holy Touch — heal 10% of damage dealt",
+    "Chimera":"Adaptive Evolution — +2 dmg after taking damage (stacks 3×)",
+    "Reaper":"Soul Reaper — heal 30% dealt + 10% scaling dmg",
+    "Fire Dragon":"Burning Aura — 4 burn every round",
+    "Thunder Dragon":"Paralyzing Shock — 10% to nullify attack",
+    "Ice Dragon":"Frost Armor — heal 10% of damage received",
+    "Earth Dragon":"Stone Skin — 15% damage reduction",
+    "Cyborg":"Overclock — every 3 attacks = 1.3× surge",
+    "Half-Blood":"Scrappy — +3 dmg below 25% HP",
+    "Mechangel":"Quantum Processing — every 2 attacks = 1.4×",
+    "Archdemon":"Lord of Darkness — +15% dmg and +5 flat all attacks",
+  };
+  return p[name] || "No passive";
+}
+
+function getActive(name) {
+  const a = {
+    "Orc":"Berserker Rage — 2× next attack, 20% recoil (CD: 6)",
+    "Goblin":"Nimble Escape — guaranteed dodge for 1 round (CD: 6)",
+    "Ogre":"Massive Blow — 1.5× + stun + extra turn (CD: 9)",
+    "High Orc":"War Cry — +50% ATK for 2 attacks (CD: 10)",
+    "Kijin":"Shadow Clone — clone absorbs 1 hit (CD: 8)",
+    "Orc Lord":"Royal Command — block enemy heal for 1 round (CD: 7)",
+    "Oni":"Demonic Possession — enemy attacks themselves next turn (CD: 10)",
+    "Demon":"Soul Steal — 2× next attack (CD: 4)",
+    "Demon King":"Infernal Domain — +30% dmg for 3 turns (CD: 15)",
+    "Demon Lord":"Hellfire — 2× + 7 burn for 2 rounds (CD: 10)",
+    "Demi God":"Divine Wrath — 2.5× next attack (CD: 12)",
+    "God":"Divine Judgment — remove 50% enemy HP, heal 50% own HP (CD: 12)",
+    "Angel":"Divine Blessing — choose: 1.5× + 35% heal OR 60% heal (CD: 10)",
+    "Chimera":"Mirror Realm — copy opponent's ULT directly (CD: 15)",
+    "Reaper":"Death's Judgment — below 20%: instant kill | above 20%: 1.7× + 50% life steal (CD: 12)",
+    "Fire Dragon":"Inferno Blast — 1.7× + 10 burn 2 rounds (CD: 11)",
+    "Thunder Dragon":"Thunder Surge — 1.4× + paralyze (CD: 12)",
+    "Ice Dragon":"Glacial Spike — choose: 1.9× OR +50% heal (CD: 10)",
+    "Earth Dragon":"Terra Shield — choose: 1.2× invincible OR −60% dmg + 20% heal boost (CD: 11)",
+    "Cyborg":"Self-Repair — heal 30% max HP + 15% dmg reduction 2 turns (CD: 7)",
+    "Half-Blood":"Awakened Blood — 1.4× + heal 10 HP (CD: 7)",
+    "Mechangel":"System Restoration — heal 40% + 20% reduction 2 turns (CD: 6)",
+    "Archdemon":"Abyssal Gate — 2× + 10 curse 3 turns (CD: 10)",
+  };
+  return a[name] || "No ultimate";
+}
+
+// ══════════════════════════════════════════════════════════════════
+//  SPECIES HELPERS
+// ══════════════════════════════════════════════════════════════════
+
+function getSpeciesByName(name) {
+  if (name === "God")       return {...SPECIAL_SPECIES.god};
+  if (name === "Reaper")    return {...SPECIAL_SPECIES.reaper};
+  if (name === "Archdemon") return {...SPECIAL_SPECIES.archdemon};
+  if (name === "Mechangel") return {...SPECIAL_SPECIES.mechangel};
+  const base = SPECIES_LIST.find(s => s.name === name);
+  if (base) return {...base};
+  for (const dt of DRAGON_TYPES) {
+    if (name === dt.type + " Dragon") {
+      return { number:17, name: dt.type+" Dragon", emoji: dt.emoji,
+        chance: dt.chance, color: dt.color, hp: dt.hp, tier: dt.tier,
+        atkMin: dt.atkMin, atkMax: dt.atkMax, healMin: dt.healMin,
+        healMax: dt.healMax, ultCooldown: dt.ultCooldown };
+    }
+  }
+  return null;
+}
+
+function getAllSpecies() {
+  const all = [...SPECIES_LIST];
+  for (const dt of DRAGON_TYPES) {
+    all.push({ number:17, name: dt.type+" Dragon", emoji: dt.emoji,
+      chance: dt.chance, color: dt.color, hp: dt.hp, tier: dt.tier,
+      atkMin: dt.atkMin, atkMax: dt.atkMax, healMin: dt.healMin,
+      healMax: dt.healMax, ultCooldown: dt.ultCooldown });
+  }
+  all.push({...SPECIAL_SPECIES.god}, {...SPECIAL_SPECIES.reaper},
+           {...SPECIAL_SPECIES.archdemon}, {...SPECIAL_SPECIES.mechangel});
+  return all;
+}
+
+function rollSpecies() {
+  if (Math.random() * 100 < 2) {
+    const dt = DRAGON_TYPES[Math.floor(Math.random() * DRAGON_TYPES.length)];
+    return getSpeciesByName(dt.type + " Dragon");
+  }
+  const rollable = SPECIES_LIST.filter(s => s.rarity > 0);
+  const total = rollable.reduce((s,x) => s + x.rarity, 0);
+  let r = Math.random() * total;
+  for (const sp of rollable) { if (r < sp.rarity) return {...sp}; r -= sp.rarity; }
+  return {...SPECIES_LIST.find(s => s.name === "Orc")};
+}
+
+// ══════════════════════════════════════════════════════════════════
+//  GAME STATE
+// ══════════════════════════════════════════════════════════════════
+
+let state = {
+  species: null,
+  rolls: 2,
+  wins: 0,
+  losses: 0,
+  streak: 0,
+  history: [],
+  botStats: { easy:{wins:0,losses:0}, medium:{wins:0,losses:0}, hard:{wins:0,losses:0}, impossible:{wins:0,losses:0} },
+  questProgress: { easyBots:0, mediumBots:0, hardBots:0, impossibleBots:0, playerFights:0, completed:false, claimed:false },
+  awakening: { cyborg: { wins:0, damageDealt:0, ultUses:0, awakened:false } },
+  pendingRoll: null,
+};
+
+function saveState() {
+  try { localStorage.setItem('loz_state', JSON.stringify(state)); } catch(e){}
+}
+function loadState() {
+  try {
+    const s = localStorage.getItem('loz_state');
+    if (s) state = {...state, ...JSON.parse(s)};
+  } catch(e){}
+}
+
+// ══════════════════════════════════════════════════════════════════
+//  COMBAT ENGINE
+// ══════════════════════════════════════════════════════════════════
+
+function makeCombatant(speciesName) {
+  const sp = getSpeciesByName(speciesName);
+  return {
+    species: sp,
+    maxHp: sp.hp, currentHp: sp.hp,
+    healCooldown: 0, ultCooldown: 0, ultBuff: null,
+    adaptiveStacks: 0, attackCounter: 0,
+    burn: 0, burnRounds: 0, curse: 0, curseRounds: 0,
+    blockHeal: false, possession: false, stunnedTurns: 0,
+    lastUltUsed: null,
+  };
+}
+
+function ri(min, max) {
+  return Math.floor(Math.random() * (max - min + 1)) + min;
+}
+
+function calculateDamage(attacker, defender) {
+  const attackerMut = { hpDelta: 0 };
+  const lines = [];
+
+  // Shadow Clone
+  if (defender.ultBuff?.type === "clone" && defender.ultBuff.duration > 0) {
+    defender.ultBuff.duration--;
+    if (defender.ultBuff.duration <= 0) defender.ultBuff = null;
+    return { damage:0, baseDamage:0, lines:["🛡️ SHADOW CLONE! Clone absorbs the hit!"], attackerMut };
+  }
+  // Dodge buff
+  if (defender.ultBuff?.type === "dodge") {
+    defender.ultBuff = null;
+    return { damage:0, baseDamage:0, lines:["💨 NIMBLE ESCAPE! Attack dodged!"], attackerMut, missed:true };
+  }
+  // Goblin passive dodge
+  if (defender.species.name === "Goblin" && Math.random() < 0.1)
+    return { damage:0, baseDamage:0, lines:["💨 Speed Dodge! Too slow!"], attackerMut, missed:true };
+  // Thunder Dragon paralyze
+  if (defender.species.name === "Thunder Dragon" && Math.random() < 0.1)
+    return { damage:0, baseDamage:0, lines:["⚡ Paralyzing Shock! Attack fails!"], attackerMut, missed:true };
+  // Earth Dragon invincible
+  if (defender.ultBuff?.type === "invincible") {
+    defender.ultBuff = null;
+    return { damage:0, baseDamage:0, lines:["🌍 TERRA SHIELD! Invincible!"], attackerMut, missed:true };
+  }
+
+  // Miss + counter
+  const missRate = FAIL_CHANCES[attacker.species.name] || 0.05;
+  if (Math.random() < missRate) {
+    if (Math.random() < 0.3) {
+      const avg = Math.floor((defender.species.atkMin + defender.species.atkMax) / 2);
+      const ctr = Math.floor(avg * 0.6);
+      attackerMut.hpDelta -= ctr;
+      return { damage:0, baseDamage:0, lines:[`💨 MISS! ${defender.species.emoji} ${defender.species.name} counter-strikes for ${ctr}!`], attackerMut, missed:true };
+    }
+    return { damage:0, baseDamage:0, lines:["💨 MISS! The attack whiffed!"], attackerMut, missed:true };
+  }
+
+  let baseDamage = ri(attacker.species.atkMin, attacker.species.atkMax);
+  let finalDamage = baseDamage, mult = 1;
+
+  // Attacker passives
+  if (attacker.species.name === "Orc" && attacker.currentHp < attacker.maxHp * 0.3) { finalDamage += 5; lines.push("🟢 Berserker +5"); }
+  if (attacker.species.name === "Half-Blood" && attacker.currentHp < attacker.maxHp * 0.25) { finalDamage += 3; lines.push("🩸 Scrappy +3"); }
+  if (attacker.species.name === "Chimera" && attacker.adaptiveStacks > 0) {
+    finalDamage += attacker.adaptiveStacks * 2; lines.push(`🎭 Adaptive +${attacker.adaptiveStacks*2}`); attacker.adaptiveStacks = 0;
+  }
+  if (attacker.species.name === "Reaper") { mult *= 1.1; lines.push("🌑 Soul Reaper +10%"); }
+  if (attacker.species.name === "Archdemon") { mult *= 1.15; finalDamage += 5; lines.push("👿 Lord of Darkness +15%+5"); }
+  if (attacker.species.name === "Orc Lord") { const d = Math.floor(defender.maxHp * 0.075); finalDamage += d; lines.push(`👑 Despair +${d}`); }
+  if (attacker.species.name === "Mechangel") {
+    attacker.attackCounter = (attacker.attackCounter || 0) + 1;
+    if (attacker.attackCounter % 2 === 0) { mult *= 1.4; lines.push("⚡ Quantum ×1.4"); }
+  }
+
+  // ULT buff
+  if (attacker.ultBuff) {
+    const ub = attacker.ultBuff;
+    if (ub.type === "reaperKill") {
+      if (defender.currentHp < defender.maxHp * 0.2) {
+        const killDmg = defender.currentHp;
+        const ls = Math.floor(killDmg * 0.5);
+        attackerMut.hpDelta += ls;
+        attacker.ultBuff = null;
+        return { damage:killDmg, baseDamage, lines:["💀 DEATH'S JUDGMENT — INSTANT KILL!"], attackerMut, instantKill:true };
+      } else {
+        mult *= 1.7; ub._reaperHeal = true; ub.type = "nextAttack";
+        lines.push("🌑 Reaper ULT ×1.7 + 50% life steal");
+      }
+    }
+    if (ub.type === "nextAttack" && ub.multiplier) {
+      mult *= ub.multiplier; lines.push(`✨ ULT ×${ub.multiplier}`);
+      if (attacker.species.name === "Orc" && ub.recoil) { const r = Math.floor(finalDamage*mult*ub.recoil); attackerMut.hpDelta -= r; lines.push(`💥 Recoil -${r}`); }
+      if (ub.angelHeal) { const h = Math.floor(attacker.maxHp * 0.35); attackerMut.hpDelta += h; lines.push(`👼 Blessing +${h}`); }
+      if (ub.healSelf && ub.healAmount) { attackerMut.hpDelta += ub.healAmount; lines.push(`🩸 Heal +${ub.healAmount}`); }
+      if (ub.curse && ub.curseRounds) { defender.curse = (defender.curse||0)+ub.curse; defender.curseRounds = ub.curseRounds; lines.push("👿 Curse applied"); }
+      if (ub.burn && ub.burnRounds) { defender.burn = (defender.burn||0)+ub.burn; defender.burnRounds = Math.max(defender.burnRounds||0, ub.burnRounds); lines.push(`🔥 Burn +${ub.burn}`); }
+      if (ub._reaperHeal) { const ls = Math.floor(finalDamage*mult*0.5); attackerMut.hpDelta += ls; lines.push(`🌑 Life Steal +${ls}`); }
+      attacker.ultBuff = null;
+    } else if (ub.type === "buff" && ub.attack) {
+      mult *= ub.attack; lines.push(`💪 Buff +${Math.round((ub.attack-1)*100)}%`);
+      ub.duration--; if (ub.duration <= 0) attacker.ultBuff = null;
+    } else if (ub.type === "thunderActive") {
+      mult *= 1.4; lines.push("⚡ Thunder Surge ×1.4"); attacker.ultBuff = null;
+    }
+  }
+
+  // Defender reductions
+  const isArch = attacker.species.name === "Archdemon";
+  if (!isArch) {
+    if (defender.species.name === "Demon King")   { mult *= 0.9;  lines.push("Fear Aura -10%"); }
+    if (defender.species.name === "Oni")           { mult *= 0.9;  lines.push("Demonic Resilience -10%"); }
+    if (defender.species.name === "Demi God")      { mult *= 0.85; lines.push("Divine Shield -15%"); }
+    if (defender.species.name === "Earth Dragon")  { mult *= 0.85; lines.push("Stone Skin -15%"); }
+  }
+  if (defender.ultBuff?.type === "cyborgArmor")    { mult *= 0.85; lines.push("🤖 Cyborg Armor -15%"); defender.ultBuff.duration--; if(defender.ultBuff.duration<=0)defender.ultBuff=null; }
+  if (defender.ultBuff?.type === "damageReduction"){ mult *= (1-defender.ultBuff.amount); lines.push(`⚡ Shield -${defender.ultBuff.amount*100}%`); defender.ultBuff.duration--; if(defender.ultBuff.duration<=0)defender.ultBuff=null; }
+  if (defender.ultBuff?.type === "earthDamageReduction"){ mult *= 0.4; lines.push("🌍 Terra -60%"); defender.ultBuff=null; }
+
+  // Type advantage
+  const adv = TYPE_ADV[attacker.species.name];
+  if (adv && !isArch) {
+    if (adv.strongAgainst === defender.species.name) { mult *= 1.2; lines.push("Type adv +20%"); }
+    else if (adv.weakAgainst === defender.species.name) { mult *= 0.8; lines.push("Type disadv -20%"); }
+  }
+
+  // Crit
+  const crit = CRIT_RATES[attacker.species.name];
+  if (crit && Math.random() * 100 < crit.chance) { mult *= crit.multiplier; lines.push(`💥 CRIT ×${crit.multiplier}`); }
+
+  // Kijin shadow dance
+  if (attacker.species.name === "Kijin" && Math.random() < 0.15) {
+    const s = ri(attacker.species.atkMin, attacker.species.atkMax);
+    finalDamage += s; lines.push(`🎭 Shadow Dance +${s}`);
+  }
+
+  finalDamage = Math.max(0, Math.floor(finalDamage * mult));
+
+  // Post-damage attacker heals
+  if (finalDamage > 0) {
+    if (attacker.species.name === "Reaper") { const h=Math.floor(finalDamage*0.3); attackerMut.hpDelta+=h; lines.push(`🌑 Soul Reaper +${h}`); }
+    if (attacker.species.name === "Demon")  { const h=Math.floor(finalDamage*0.2); attackerMut.hpDelta+=h; lines.push(`😈 Life Steal +${h}`); }
+    if (attacker.species.name === "Angel")  { const h=Math.floor(finalDamage*0.1); attackerMut.hpDelta+=h; lines.push(`👼 Holy Touch +${h}`); }
+    if (defender.species.name === "Ice Dragon") { const h=Math.floor(finalDamage*0.1); defender.currentHp=Math.min(defender.maxHp,defender.currentHp+h); lines.push(`❄️ Frost Armor +${h}`); }
+  }
+
+  // Passive burns
+  if (attacker.species.name === "Demon Lord") { defender.burn=(defender.burn||0)+5; defender.burnRounds=Math.max(defender.burnRounds||0,1); lines.push("🔥 Burning Aura +5"); }
+  if (attacker.species.name === "Fire Dragon") { defender.burn=(defender.burn||0)+4; defender.burnRounds=Math.max(defender.burnRounds||0,1); lines.push("🔥 Burn +4"); }
+
+  return { damage: finalDamage, baseDamage, lines, attackerMut, missed: false };
+}
+
+function applyUltEffect(attacker, defender) {
+  const sp = attacker.species.name;
+  let msg = "", requiresChoice = false, choiceType = null;
+
+  switch(sp) {
+    case "Orc":         attacker.ultBuff={type:"nextAttack",multiplier:2,recoil:0.2}; msg="⚡ BERSERKER RAGE! 2× + 20% recoil!"; break;
+    case "Goblin":      attacker.ultBuff={type:"dodge",duration:1}; msg="💨 NIMBLE ESCAPE! Dodge next attack!"; break;
+    case "Ogre":        attacker.ultBuff={type:"nextAttack",multiplier:1.5}; msg="💥 MASSIVE BLOW! 1.5× + stun + EXTRA TURN!"; break;
+    case "High Orc":    attacker.ultBuff={type:"buff",attack:1.5,duration:2}; msg="📢 WAR CRY! +50% ATK for 2 attacks!"; break;
+    case "Kijin":       attacker.ultBuff={type:"clone",duration:1}; msg="👥 SHADOW CLONE! Clone absorbs next hit!"; break;
+    case "Orc Lord":    defender.blockHeal=true; msg="👑 ROYAL COMMAND! Opponent can't heal!"; break;
+    case "Oni":         defender.possession=true; msg="🎭 DEMONIC POSSESSION! Opponent attacks themselves!"; break;
+    case "Demon":       attacker.ultBuff={type:"nextAttack",multiplier:2}; msg="💀 SOUL STEAL! 2× next attack!"; break;
+    case "Demon King":  attacker.ultBuff={type:"buff",attack:1.3,duration:3}; msg="🔥 INFERNAL DOMAIN! +30% dmg 3 turns!"; break;
+    case "Demon Lord":  attacker.ultBuff={type:"nextAttack",multiplier:2,burn:7,burnRounds:2}; msg="🔥 HELLFIRE! 2× + 7 burn!"; break;
+    case "Demi God":    attacker.ultBuff={type:"nextAttack",multiplier:2.5}; msg="✨ DIVINE WRATH! 2.5× next attack!"; break;
+    case "God": {
+      const dmg=Math.floor(defender.currentHp*0.5), heal=Math.floor(attacker.maxHp*0.5);
+      defender.currentHp-=dmg; attacker.currentHp=Math.min(attacker.maxHp,attacker.currentHp+heal);
+      msg=`⚖️ DIVINE JUDGMENT! -${dmg} to opponent | +${heal} to you!`; break;
+    }
+    case "Angel":       requiresChoice=true; choiceType="angel"; msg="👼 DIVINE BLESSING! Choose your path:"; break;
+    case "Ice Dragon":  requiresChoice=true; choiceType="ice_dragon"; msg="❄️ GLACIAL SPIKE! Choose your path:"; break;
+    case "Earth Dragon":requiresChoice=true; choiceType="earth_dragon"; msg="🌍 TERRA SHIELD! Choose your path:"; break;
+    case "Reaper":      attacker.ultBuff={type:"reaperKill",multiplier:1.7}; msg="🌑 DEATH'S JUDGMENT! Below 20%: Instant Kill!"; break;
+    case "Fire Dragon": attacker.ultBuff={type:"nextAttack",multiplier:1.7,burn:10,burnRounds:2}; msg="🔥 INFERNO BLAST! 1.7× + 10 burn!"; break;
+    case "Thunder Dragon": attacker.ultBuff={type:"thunderActive"}; msg="⚡ THUNDER SURGE! 1.4× + paralyze!"; break;
+    case "Cyborg": {
+      const h=Math.floor(attacker.maxHp*0.3);
+      attacker.currentHp=Math.min(attacker.maxHp,attacker.currentHp+h);
+      attacker.ultBuff={type:"cyborgArmor",duration:2};
+      msg=`🤖 SELF-REPAIR! Healed ${h} HP + 15% reduction 2 turns!`; break;
+    }
+    case "Half-Blood":  attacker.ultBuff={type:"nextAttack",multiplier:1.4,healSelf:true,healAmount:10}; msg="🩸 AWAKENED BLOOD! 1.4× + heal 10!"; break;
+    case "Mechangel": {
+      const h=Math.floor(attacker.maxHp*0.4);
+      attacker.currentHp=Math.min(attacker.maxHp,attacker.currentHp+h);
+      attacker.ultBuff={type:"damageReduction",amount:0.2,duration:2};
+      msg=`⚡ SYSTEM RESTORATION! Healed ${h} + 20% reduction!`; break;
+    }
+    case "Archdemon":   attacker.ultBuff={type:"nextAttack",multiplier:2.0,curse:10,curseRounds:3}; msg="👿 ABYSSAL GATE! 2× + 10 curse 3 turns!"; break;
+    case "Chimera": {
+      const orig = attacker.species;
+      attacker.species = defender.species;
+      const copied = applyUltEffect(attacker, defender);
+      attacker.species = orig;
+      msg = `🎭 MIRROR REALM! Copied ${defender.species.name}'s ULT!\n${copied.msg}`;
+      requiresChoice = copied.requiresChoice; choiceType = copied.choiceType;
+      break;
+    }
+    default: msg = "✨ ULTIMATE!";
+  }
+  return { msg, requiresChoice, choiceType };
+}
+
+function applyBurnTick(c) {
+  if (!c.burn || c.burn <= 0) return null;
+  const dmg = c.burn;
+  c.currentHp = Math.max(0, c.currentHp - dmg);
+  c.burnRounds--;
+  if (c.burnRounds <= 0) { c.burn = 0; c.burnRounds = 0; }
+  return `🔥 Burn deals ${dmg} damage`;
+}
+
+function tickCooldowns(c) {
+  if (c.healCooldown > 0) c.healCooldown--;
+  if (c.ultCooldown > 0)  c.ultCooldown--;
+  if (c.stunnedTurns > 0) c.stunnedTurns--;
+  if (c.curseRounds > 0) { c.curseRounds--; if (c.curseRounds <= 0) c.curse = 0; }
+}
+
+function doHeal(c) {
+  const rawH = ri(c.species.healMin, c.species.healMax);
+  let h = rawH;
+  const lines = [];
+  if (c.currentHp < c.maxHp * 0.15) {
+    if (Math.random() < 0.75) { h = Math.floor(h * 0.5); lines.push("💔 Desperate heal — only 50%!"); }
+    else { h = Math.floor(h * 1.3); lines.push("✨ Miracle heal +30%!"); }
+  }
+  c.currentHp = Math.min(c.maxHp, c.currentHp + h);
+  c.healCooldown = 3;
+  lines.unshift(`💚 Healed for ${h} HP!`);
+  return lines;
+}
+
+// ══════════════════════════════════════════════════════════════════
+//  UI UTILITIES
+// ══════════════════════════════════════════════════════════════════
+
+function hpPct(cur, max) { return Math.max(0, Math.min(100, (cur/max)*100)); }
+function hpClass(pct) { return pct > 50 ? "high" : pct > 25 ? "mid" : "low"; }
+
+function updateHpBar(barId, textId, current, max) {
+  const pct = hpPct(current, max);
+  const bar = document.getElementById(barId);
+  const txt = document.getElementById(textId);
+  if (bar) { bar.style.width = pct + "%"; bar.className = "hp-bar-inner " + hpClass(pct); }
+  if (txt) txt.textContent = `${Math.max(0,current)} / ${max}`;
+}
+
+function addLog(logId, ...lines) {
+  const log = document.getElementById(logId);
+  if (!log) return;
+  for (const line of lines) {
+    const div = document.createElement("div");
+    div.className = "log-line new";
+    div.textContent = line;
+    log.appendChild(div);
+    setTimeout(() => div.classList.remove("new"), 500);
+  }
+  log.scrollTop = log.scrollHeight;
+}
+
+function clearLog(logId) {
+  const el = document.getElementById(logId);
+  if (el) el.innerHTML = "";
+}
+
+function showToast(msg, dur=2500) {
+  const t = document.getElementById("toast");
+  t.textContent = msg; t.classList.remove("hidden");
+  clearTimeout(window._toastTimer);
+  window._toastTimer = setTimeout(() => t.classList.add("hidden"), dur);
+}
+
+function gotoPage(id) {
+  document.querySelectorAll(".page").forEach(p => p.classList.remove("active"));
+  document.querySelectorAll("nav button").forEach(b => b.classList.remove("active"));
+  document.getElementById("page-"+id).classList.add("active");
+  const navBtns = document.querySelectorAll("nav button");
+  const pages = ["home","species","fight","botfight","profile","patch"];
+  const idx = pages.indexOf(id);
+  if (idx >= 0) navBtns[idx].classList.add("active");
+  if (id === "species") renderSpeciesPage();
+  if (id === "profile") renderProfile();
+  if (id === "patch")   renderPatch();
+  if (id === "botfight") renderBotSetup();
+  if (id === "home")    renderHome();
+}
+
+function closeModal() { document.getElementById("speciesModal").classList.add("hidden"); }
+function showModal() { document.getElementById("speciesModal").classList.remove("hidden"); }
+
+// ══════════════════════════════════════════════════════════════════
+//  HOME
+// ══════════════════════════════════════════════════════════════════
+
+function renderHome() {
+  const has = !!state.species;
+  document.getElementById("home-no-species").style.display = has ? "none" : "";
+  document.getElementById("home-has-species").style.display = has ? "" : "none";
+  const rollsDisplay = document.getElementById("rollsDisplay");
+  rollsDisplay.style.display = "";
+  document.getElementById("rollCountNum").textContent = state.rolls;
+
+  if (has) {
+    const sp = state.species;
+    document.getElementById("homeEmoji").textContent = sp.emoji;
+    document.getElementById("homeName").textContent = sp.name;
+    document.getElementById("homeRarity").textContent = `${sp.tier?.toUpperCase() || ""} — Roll chance: ${sp.chance || "—"}`;
+    document.getElementById("homeStats").innerHTML = `
+      <span class="stat-pill">❤️ ${sp.hp} HP</span>
+      <span class="stat-pill">⚔️ ${sp.atkMin}–${sp.atkMax} ATK</span>
+      <span class="stat-pill">💚 ${sp.healMin}–${sp.healMax} HEAL</span>
+      <span class="stat-pill">✨ CD: ${sp.ultCooldown}</span>
+    `;
+    document.getElementById("homePassive").innerHTML = `<div class="ability-label">Passive</div><div class="ability-text">${getPassive(sp.name)}</div>`;
+    document.getElementById("homeUlt").innerHTML = `<div class="ability-label">Ultimate</div><div class="ability-text">${getActive(sp.name)}</div>`;
+    document.getElementById("homeSpeciesCard").style.borderColor = sp.color || "#333";
+
+    // Awakening check (Cyborg)
+    const awk = state.awakening?.cyborg;
+    const req = { wins:25, damageDealt:500, ultUses:15 };
+    const ready = sp.name === "Cyborg" && awk && awk.wins>=req.wins && awk.damageDealt>=req.damageDealt && awk.ultUses>=req.ultUses && !awk.awakened;
+    document.getElementById("homeAwakeningBox").style.display = ready ? "" : "none";
+  }
+}
+
+// ══════════════════════════════════════════════════════════════════
+//  ROLL
+// ══════════════════════════════════════════════════════════════════
+
+function doRoll() {
+  if (state.rolls <= 0) { showToast("❌ No rolls left!"); return; }
+  const sp = rollSpecies();
+  state.pendingRoll = sp;
+  const tierColors = { legendary:"#d4af37", epic:"#9b59b6", rare:"#3498db", common:"#aaa" };
+  const col = tierColors[sp.tier] || "#aaa";
+  document.getElementById("rollContent").innerHTML = `
+    <div class="roll-result">
+      <span class="big-emoji">${sp.emoji}</span>
+      <div class="roll-name" style="color:${col}">${sp.name}</div>
+      <div class="roll-chance">${sp.tier?.toUpperCase()} — ${sp.chance} roll chance</div>
+      <div style="margin-top:12px;font-size:0.85rem;color:var(--muted)">
+        ❤️ ${sp.hp} HP &nbsp; ⚔️ ${sp.atkMin}–${sp.atkMax} ATK &nbsp; 💚 ${sp.healMin}–${sp.healMax} HEAL
+      </div>
+    </div>
+  `;
+  document.getElementById("rollModal").classList.remove("hidden");
+  document.getElementById("rerollBtn").disabled = state.rolls <= 1;
+  document.getElementById("rerollBtn").textContent = `🎲 Reroll (${state.rolls-1} left)`;
+}
+
+function keepRoll() {
+  if (!state.pendingRoll) return;
+  state.rolls--;
+  state.species = state.pendingRoll;
+  state.pendingRoll = null;
+  document.getElementById("rollModal").classList.add("hidden");
+  saveState();
+  renderHome();
+  showToast(`✅ You are now a ${state.species.name}!`);
+}
+
+// ══════════════════════════════════════════════════════════════════
+//  AWAKENING
+// ══════════════════════════════════════════════════════════════════
+
+function doAwakening() {
+  if (!state.awakening?.cyborg) return;
+  state.awakening.cyborg.awakened = true;
+  state.species = getSpeciesByName("Mechangel");
+  saveState();
+  renderHome();
+  showToast("⚡ Awakened into Mechangel!");
+}
+
+// ══════════════════════════════════════════════════════════════════
+//  SPECIES PAGE
+// ══════════════════════════════════════════════════════════════════
+
+function renderSpeciesPage() {
+  renderSpeciesGrid("all");
+}
+
+function filterSpecies(tier, btn) {
+  document.querySelectorAll("#speciesTabs .tab").forEach(t => t.classList.remove("active"));
+  btn.classList.add("active");
+  renderSpeciesGrid(tier);
+}
+
+function renderSpeciesGrid(tier) {
+  const all = getAllSpecies();
+  const filtered = tier === "all" ? all : all.filter(s => s.tier === tier);
+  const grid = document.getElementById("speciesGrid");
+  const tierColors = { legendary:"#d4af37", epic:"#9b59b6", rare:"#3498db", common:"#666" };
+  grid.innerHTML = filtered.map(sp => `
+    <div class="species-card" style="border-color:${sp.color||"#333"};color:${sp.color||"#333"}"
+         onclick="showSpeciesDetail('${sp.name.replace(/'/g,"\\'")}')">
+      <div class="species-emoji">${sp.emoji}</div>
+      <div class="species-name" style="color:${sp.color||"#aaa"}">${sp.name}</div>
+      <div class="species-rarity">${sp.chance || "—"}</div>
+      <div class="species-stats">
+        <span class="stat-pill">❤️ ${sp.hp}</span>
+        <span class="stat-pill">⚔️ ${sp.atkMin}–${sp.atkMax}</span>
+      </div>
+    </div>
+  `).join("");
+}
+
+function showSpeciesDetail(name) {
+  const sp = getSpeciesByName(name);
+  if (!sp) return;
+  document.getElementById("modalTitle").textContent = `${sp.emoji} ${sp.name}`;
+  document.getElementById("modalContent").innerHTML = `
+    <div style="text-align:center;margin-bottom:16px">
+      <div style="font-size:3rem;margin-bottom:6px">${sp.emoji}</div>
+      <div style="color:${sp.color||"#aaa"};font-family:'Cinzel Decorative',serif">${sp.name}</div>
+      <div style="color:var(--muted);font-size:0.8rem">${sp.tier?.toUpperCase()} — ${sp.chance || "—"}</div>
+    </div>
+    <div class="stat-grid" style="margin-bottom:12px">
+      <div class="stat-box"><div class="stat-num">${sp.hp}</div><div class="stat-lbl">Max HP</div></div>
+      <div class="stat-box"><div class="stat-num">${sp.atkMin}–${sp.atkMax}</div><div class="stat-lbl">ATK</div></div>
+      <div class="stat-box"><div class="stat-num">${sp.healMin}–${sp.healMax}</div><div class="stat-lbl">Heal</div></div>
+    </div>
+    <div class="ability-box" style="border-color:var(--purple)">
+      <div class="ability-label">Passive</div>
+      <div class="ability-text">${getPassive(name)}</div>
+    </div>
+    <div class="ability-box" style="border-color:var(--gold)">
+      <div class="ability-label">Ultimate (CD: ${sp.ultCooldown})</div>
+      <div class="ability-text">${getActive(name)}</div>
+    </div>
+    ${TYPE_ADV[name] ? `
+    <div style="margin-top:10px;font-size:0.85rem;color:var(--muted)">
+      ${TYPE_ADV[name].strongAgainst ? `✅ Strong vs <b style="color:var(--text)">${TYPE_ADV[name].strongAgainst}</b>` : ""}
+      ${TYPE_ADV[name].weakAgainst ? `&nbsp;&nbsp;❌ Weak vs <b style="color:var(--text)">${TYPE_ADV[name].weakAgainst}</b>` : ""}
+    </div>` : ""}
+  `;
+  showModal();
+}
+
+// ══════════════════════════════════════════════════════════════════
+//  PVP FIGHT
+// ══════════════════════════════════════════════════════════════════
+
+let pvp = null;
+
+function initPvpSpeciesGrid() {
+  const all = getAllSpecies().filter(s => !["God","Reaper","Archdemon","Mechangel"].includes(s.name));
+  document.getElementById("pvpSpeciesGrid").innerHTML = all.map(sp => `
+    <div class="species-card" style="border-color:${sp.color||"#333"};cursor:pointer;padding:10px"
+         onclick="startPvp('${sp.name.replace(/'/g,"\\'")}')">
+      <div style="font-size:1.8rem">${sp.emoji}</div>
+      <div class="species-name" style="color:${sp.color||"#aaa"};font-size:0.75rem">${sp.name}</div>
+    </div>
+  `).join("");
+}
+
+function startPvp(opponentName) {
+  if (!state.species) { showToast("❌ Roll a species first!"); gotoPage("home"); return; }
+  const p1sp = state.species;
+  const p2sp = getSpeciesByName(opponentName);
+  pvp = {
+    p1: makeCombatant(p1sp.name),
+    p2: makeCombatant(opponentName),
+    round: 1,
+    currentTurn: Math.random() < 0.5 ? "p1" : "p2",
+    active: true,
+    pendingChoice: null,
+    extraTurn: false,
+  };
+
+  document.getElementById("pvp-setup").style.display = "none";
+  document.getElementById("pvp-arena").style.display = "";
+  document.getElementById("pvp-result").style.display = "none";
+
+  document.getElementById("pvpP1Emoji").textContent = p1sp.emoji;
+  document.getElementById("pvpP1Name").textContent = `You — ${p1sp.name}`;
+  document.getElementById("pvpP2Emoji").textContent = p2sp.emoji;
+  document.getElementById("pvpP2Name").textContent = `Opponent — ${opponentName}`;
+
+  clearLog("pvpLog");
+  updatePvpUI();
+  addLog("pvpLog", `⚔️ Fight started! ${pvp.currentTurn === "p1" ? "You go" : "Opponent goes"} first!`);
+
+  if (pvp.currentTurn === "p2") {
+    setTimeout(() => doPvpOpponentTurn(), 800);
+  }
+}
+
+function updatePvpUI() {
+  if (!pvp) return;
+  updateHpBar("pvpP1Bar", "pvpP1HpText", pvp.p1.currentHp, pvp.p1.maxHp);
+  updateHpBar("pvpP2Bar", "pvpP2HpText", pvp.p2.currentHp, pvp.p2.maxHp);
+  document.getElementById("pvpRound").textContent = pvp.round;
+
+  const isMyTurn = pvp.currentTurn === "p1" && pvp.active;
+  const p1 = pvp.p1;
+  const healOk = p1.healCooldown === 0 && p1.currentHp < p1.maxHp * 0.8;
+  const ultOk = p1.ultCooldown === 0;
+  const ultLabel = p1.ultCooldown > 0 ? `✨ ULT (${p1.ultCooldown})` : "✨ ULT";
+
+  document.getElementById("pvpHealBtn").disabled = !isMyTurn || !healOk || !!pvp.pendingChoice;
+  document.getElementById("pvpHealBtn").textContent = p1.healCooldown > 0 ? `💚 HEAL (${p1.healCooldown})` : "💚 HEAL";
+  document.getElementById("pvpUltBtn").disabled = !isMyTurn || !ultOk || !!pvp.pendingChoice;
+  document.getElementById("pvpUltBtn").textContent = ultLabel;
+  document.querySelectorAll("#pvpActions .btn").forEach(b => {
+    if (b.id !== "pvpHealBtn" && b.id !== "pvpUltBtn") b.disabled = !isMyTurn || !!pvp.pendingChoice;
+  });
+
+  // Buffs
+  renderBuffs("pvpP1Buffs", pvp.p1);
+  renderBuffs("pvpP2Buffs", pvp.p2);
+
+  const banner = document.getElementById("pvpTurnBanner");
+  if (!pvp.active) { banner.textContent = "Fight over!"; return; }
+  banner.className = "turn-banner";
+  banner.textContent = pvp.currentTurn === "p1" ? "⚔️ Your turn!" : "⏳ Opponent's turn...";
+
+  // Show/hide choice buttons
+  const ca = document.getElementById("pvpChoiceActions");
+  ca.innerHTML = "";
+  ca.style.display = "none";
+  if (pvp.pendingChoice && isMyTurn) {
+    ca.style.display = "flex";
+    if (pvp.pendingChoice === "angel") {
+      ca.innerHTML = `<button class="btn btn-red" onclick="pvpChoice('angel_smite')">⚔️ Smite (1.5× +35% heal)</button>
+                      <button class="btn btn-green" onclick="pvpChoice('angel_prayer')">💚 Prayer (60% heal)</button>`;
+    } else if (pvp.pendingChoice === "ice_dragon") {
+      ca.innerHTML = `<button class="btn btn-red" onclick="pvpChoice('ice_attack')">⚔️ Glacial Strike (1.9×)</button>
+                      <button class="btn btn-green" onclick="pvpChoice('ice_heal')">💚 Glacial Heal (+50%)</button>`;
+    } else if (pvp.pendingChoice === "earth_dragon") {
+      ca.innerHTML = `<button class="btn btn-red" onclick="pvpChoice('earth_attack')">⚔️ Terra Strike (1.2×)</button>
+                      <button class="btn btn-blue" onclick="pvpChoice('earth_shield')">🛡️ Terra Shield</button>`;
+    }
+  }
+}
+
+function renderBuffs(elId, c) {
+  const el = document.getElementById(elId);
+  if (!el) return;
+  const parts = [];
+  if (c.ultBuff)         parts.push(`<span class="buff-tag" style="border-color:var(--gold);color:var(--gold)">✨ ${c.ultBuff.type}</span>`);
+  if (c.burn > 0)        parts.push(`<span class="buff-tag" style="border-color:var(--red);color:var(--red)">🔥 Burn ${c.burn}×${c.burnRounds}</span>`);
+  if (c.curse > 0)       parts.push(`<span class="buff-tag" style="border-color:var(--purple);color:var(--purple)">👿 Curse ${c.curse}</span>`);
+  if (c.blockHeal)       parts.push(`<span class="buff-tag" style="border-color:var(--red);color:var(--red)">🚫 No Heal</span>`);
+  if (c.possession)      parts.push(`<span class="buff-tag" style="border-color:var(--purple);color:var(--purple)">🎭 Possessed</span>`);
+  if (c.stunnedTurns>0)  parts.push(`<span class="buff-tag" style="border-color:var(--blue);color:var(--blue)">⚡ Stunned</span>`);
+  el.innerHTML = parts.join("");
+}
+
+function pvpAction(action) {
+  if (!pvp || !pvp.active || pvp.currentTurn !== "p1" || pvp.pendingChoice) return;
+  const p1 = pvp.p1, p2 = pvp.p2;
+
+  if (action === "forfeit") {
+    endPvp(false, "forfeit");
+    return;
+  }
+
+  // Ogre regen
+  if (p1.species.name === "Ogre") {
+    p1.currentHp = Math.min(p1.maxHp, p1.currentHp + 5);
+    addLog("pvpLog", "👹 Regeneration +5 HP");
+  }
+
+  // Possession
+  if (p1.possession) {
+    p1.possession = false;
+    const selfHit = ri(p1.species.atkMin, p1.species.atkMax);
+    p1.currentHp = Math.max(0, p1.currentHp - selfHit);
+    addLog("pvpLog", `🎭 POSSESSION! You attack yourself for ${selfHit}!`);
+    updatePvpUI();
+    if (p1.currentHp <= 0) { endPvp(false, "normal"); return; }
+    pvpEndTurn(false);
+    return;
+  }
+
+  if (action === "attack") {
+    const result = calculateDamage(p1, p2);
+    p1.currentHp = Math.max(0, Math.min(p1.maxHp, p1.currentHp + result.attackerMut.hpDelta));
+    if (result.missed) {
+      addLog("pvpLog", result.lines[0]);
+      if (p2.species.name === "God" && result.missed) {
+        const gh = Math.floor(p2.currentHp * 0.2);
+        p2.currentHp = Math.min(p2.maxHp, p2.currentHp + gh);
+        addLog("pvpLog", `👑 Divine Retribution! Opponent heals ${gh}!`);
+      }
+    } else if (result.instantKill) {
+      p2.currentHp = 0;
+      addLog("pvpLog", ...result.lines);
+    } else {
+      p2.currentHp = Math.max(0, p2.currentHp - result.damage);
+      if (p2.species.name === "Chimera" && result.damage > 0) p2.adaptiveStacks = Math.min(3, p2.adaptiveStacks + 1);
+      addLog("pvpLog", `⚔️ You deal ${result.damage} damage!`, ...(result.lines.length ? [result.lines.slice(0,3).join(" | ")] : []));
+    }
+    updatePvpUI();
+    if (p2.currentHp <= 0) { endPvp(true, "normal"); return; }
+    if (p1.currentHp <= 0) { endPvp(false, "counter"); return; }
+    // Ogre stun extra turn
+    if (p1.ultBuff?.type === "nextAttack" && p1.species.name === "Ogre") {
+      pvp.extraTurn = true;
+    }
+    pvpEndTurn(false);
+  }
+  else if (action === "heal") {
+    if (p1.healCooldown > 0 || p1.currentHp >= p1.maxHp * 0.8) return;
+    if (p1.blockHeal) { p1.blockHeal = false; addLog("pvpLog", "👑 ROYAL COMMAND! Can't heal!"); pvpEndTurn(false); return; }
+    const lines = doHeal(p1);
+    addLog("pvpLog", ...lines);
+    updatePvpUI();
+    pvpEndTurn(false);
+  }
+  else if (action === "ult") {
+    if (p1.ultCooldown > 0) return;
+    p1.ultCooldown = p1.species.ultCooldown;
+    const { msg, requiresChoice, choiceType } = applyUltEffect(p1, p2);
+    addLog("pvpLog", msg);
+    if (p2.currentHp <= 0) { updatePvpUI(); endPvp(true, "judge"); return; }
+    if (requiresChoice) {
+      pvp.pendingChoice = choiceType;
+      updatePvpUI();
+      return;
+    }
+    // Ogre ULT: stun + extra turn
+    if (p1.species.name === "Ogre") { p2.stunnedTurns = 1; pvp.extraTurn = true; }
+    // Cyborg awakening track
+    trackCyborgUlt();
+    updatePvpUI();
+    pvpEndTurn(false);
+  }
+}
+
+function pvpChoice(choice) {
+  if (!pvp || !pvp.pendingChoice) return;
+  const p1 = pvp.p1, p2 = pvp.p2;
+  pvp.pendingChoice = null;
+
+  if (choice === "angel_smite") {
+    p1.ultBuff = {type:"nextAttack", multiplier:1.5, angelHeal:true};
+    addLog("pvpLog", "👼 SMITE chosen — 1.5× + 35% heal on next attack!");
+  } else if (choice === "angel_prayer") {
+    const h = Math.floor(p1.maxHp * 0.6);
+    p1.currentHp = Math.min(p1.maxHp, p1.currentHp + h);
+    addLog("pvpLog", `👼 PRAYER — healed ${h} HP!`);
+  } else if (choice === "ice_attack") {
+    p1.ultBuff = {type:"nextAttack", multiplier:1.9};
+    addLog("pvpLog", "❄️ GLACIAL SPIKE — 1.9× next attack!");
+  } else if (choice === "ice_heal") {
+    const h = Math.floor(p1.maxHp * 0.5);
+    p1.currentHp = Math.min(p1.maxHp, p1.currentHp + h);
+    addLog("pvpLog", `❄️ GLACIAL HEAL — +${h} HP!`);
+  } else if (choice === "earth_attack") {
+    p1.ultBuff = {type:"nextAttack", multiplier:1.2};
+    addLog("pvpLog", "🌍 TERRA STRIKE — 1.2×!");
+  } else if (choice === "earth_shield") {
+    p1.ultBuff = {type:"earthDamageReduction"};
+    p1.ultBuff = {type:"invincible"};
+    addLog("pvpLog", "🌍 TERRA SHIELD — invincible next hit!");
+  }
+  trackCyborgUlt();
+  updatePvpUI();
+  pvpEndTurn(false);
+}
+
+function pvpEndTurn(skipBurnTick) {
+  if (!pvp) return;
+  const p1 = pvp.p1, p2 = pvp.p2;
+
+  // Burn tick on defending player
+  if (!skipBurnTick) {
+    const burnt = applyBurnTick(p2);
+    if (burnt) { addLog("pvpLog", burnt + ` (Opponent: ${p2.currentHp}/${p2.maxHp})`); }
+    if (p2.currentHp <= 0) { updatePvpUI(); endPvp(true, "normal"); return; }
+  }
+
+  // Tick both cooldowns
+  tickCooldowns(p1);
+  if (p2.ultCooldown > 0) p2.ultCooldown--;
+  pvp.round++;
+
+  if (pvp.extraTurn) {
+    pvp.extraTurn = false;
+    addLog("pvpLog", "⚡ Extra turn!");
+    updatePvpUI();
+    return; // stay p1's turn
+  }
+
+  pvp.currentTurn = "p2";
+  updatePvpUI();
+  setTimeout(() => doPvpOpponentTurn(), 600);
+}
+
+function doPvpOpponentTurn() {
+  if (!pvp || !pvp.active || pvp.currentTurn !== "p2") return;
+  const p2 = pvp.p2, p1 = pvp.p1;
+
+  // Ogre regen for p2
+  if (p2.species.name === "Ogre") {
+    p2.currentHp = Math.min(p2.maxHp, p2.currentHp + 5);
+    addLog("pvpLog", "👹 Opponent Regeneration +5");
+  }
+
+  // Possession
+  if (p2.possession) {
+    p2.possession = false;
+    const selfHit = ri(p2.species.atkMin, p2.species.atkMax);
+    p2.currentHp = Math.max(0, p2.currentHp - selfHit);
+    addLog("pvpLog", `🎭 POSSESSION! Opponent attacks themselves for ${selfHit}!`);
+    updatePvpUI();
+    if (p2.currentHp <= 0) { endPvp(true, "normal"); return; }
+    pvpOpponentEndTurn();
+    return;
+  }
+
+  // AI decision
+  const healPct = p2.currentHp / p2.maxHp;
+  let action = "attack";
+  if (p2.healCooldown === 0 && healPct < 0.35 && p2.currentHp < p2.maxHp * 0.8) action = "heal";
+  else if (p2.ultCooldown === 0 && Math.random() < 0.35) action = "ult";
+
+  if (action === "heal") {
+    if (p2.blockHeal) { p2.blockHeal = false; addLog("pvpLog", "👑 Opponent blocked from healing!"); action = "attack"; }
+    else {
+      const lines = doHeal(p2);
+      addLog("pvpLog", "Opponent: " + lines[0], ...(lines.slice(1)));
+      updatePvpUI();
+      pvpOpponentEndTurn();
+      return;
+    }
+  }
+  if (action === "ult") {
+    p2.ultCooldown = p2.species.ultCooldown;
+    const { msg, requiresChoice, choiceType } = applyUltEffect(p2, p1);
+    addLog("pvpLog", "Opponent: " + msg);
+    if (p1.currentHp <= 0) { updatePvpUI(); endPvp(false, "judge"); return; }
+    if (requiresChoice) {
+      // Bot makes choice
+      if (choiceType === "angel") {
+        if (p2.currentHp < p2.maxHp * 0.4) { const h=Math.floor(p2.maxHp*0.6); p2.currentHp=Math.min(p2.maxHp,p2.currentHp+h); addLog("pvpLog",`👼 Opponent PRAYER +${h}`); }
+        else { p2.ultBuff={type:"nextAttack",multiplier:1.5,angelHeal:true}; addLog("pvpLog","👼 Opponent SMITE 1.5×"); }
+      } else if (choiceType === "ice_dragon") { p2.ultBuff={type:"nextAttack",multiplier:1.9}; addLog("pvpLog","❄️ Opponent GLACIAL SPIKE 1.9×"); }
+      else if (choiceType === "earth_dragon") { p2.ultBuff={type:"nextAttack",multiplier:1.2}; addLog("pvpLog","🌍 Opponent TERRA STRIKE 1.2×"); }
+    }
+    if (p2.species.name === "Ogre") { p1.stunnedTurns = 1; }
+    updatePvpUI();
+    pvpOpponentEndTurn();
+    return;
+  }
+  // Attack
+  const result = calculateDamage(p2, p1);
+  p2.currentHp = Math.max(0, Math.min(p2.maxHp, p2.currentHp + result.attackerMut.hpDelta));
+  if (result.missed) {
+    addLog("pvpLog", "Opponent: " + result.lines[0]);
+    if (p1.species.name === "God") { const gh=Math.floor(p1.currentHp*0.2); p1.currentHp=Math.min(p1.maxHp,p1.currentHp+gh); addLog("pvpLog",`👑 Divine Retribution! You heal ${gh}!`); }
+    if (p2.currentHp <= 0) { updatePvpUI(); endPvp(true, "counter"); return; }
+  } else if (result.instantKill) {
+    p1.currentHp = 0;
+    addLog("pvpLog", ...result.lines);
+  } else {
+    p1.currentHp = Math.max(0, p1.currentHp - result.damage);
+    if (p1.species.name === "Chimera" && result.damage > 0) p1.adaptiveStacks = Math.min(3, p1.adaptiveStacks + 1);
+    addLog("pvpLog", `⚔️ Opponent deals ${result.damage} damage!`, ...(result.lines.length ? [result.lines.slice(0,2).join(" | ")] : []));
+  }
+  updatePvpUI();
+  if (p1.currentHp <= 0) { endPvp(false, "normal"); return; }
+  if (p2.currentHp <= 0) { endPvp(true, "normal"); return; }
+  pvpOpponentEndTurn();
+}
+
+function pvpOpponentEndTurn() {
+  if (!pvp) return;
+  const p1 = pvp.p1, p2 = pvp.p2;
+  const burnt = applyBurnTick(p1);
+  if (burnt) { addLog("pvpLog", "You: " + burnt); }
+  if (p1.currentHp <= 0) { updatePvpUI(); endPvp(false, "normal"); return; }
+  tickCooldowns(p2);
+  if (p1.ultCooldown > 0) p1.ultCooldown--;
+  pvp.round++;
+  pvp.currentTurn = "p1";
+  updatePvpUI();
+}
+
+function endPvp(won, reason) {
+  if (!pvp || !pvp.active) return;
+  pvp.active = false;
+
+  const rollEarned = won && Math.random() < 0.3;
+  if (rollEarned) { state.rolls++; }
+  state.wins += won ? 1 : 0;
+  state.losses += won ? 0 : 1;
+  state.streak = won ? (state.streak + 1) : 0;
+  state.history.unshift({ vs: pvp.p2.species.name, won, reason, date: Date.now() });
+  state.history = state.history.slice(0, 20);
+  saveState();
+
+  document.getElementById("pvp-arena").style.display = "none";
+  document.getElementById("pvp-result").style.display = "";
+
+  const ico = won ? "🏆" : "💀";
+  const title = won ? "VICTORY!" : "DEFEATED";
+  const col = won ? "var(--green)" : "var(--red)";
+  let extras = "";
+  if (reason === "forfeit") extras += "<div style='color:var(--muted)'>😵 You forfeited</div>";
+  if (rollEarned) extras += "<div style='color:var(--gold)'>🎲 +1 Species Roll!</div>";
+  if (state.streak > 1) extras += `<div style='color:var(--gold)'>🔥 ${state.streak} Win Streak!</div>`;
+
+  document.getElementById("pvpResultContent").innerHTML = `
+    <span class="result-icon">${ico}</span>
+    <div class="result-title" style="color:${col}">${title}</div>
+    <div class="result-detail">
+      ${won ? `${state.species.emoji} ${state.species.name} defeated ${pvp.p2.species.emoji} ${pvp.p2.species.name}` : `${pvp.p2.species.emoji} ${pvp.p2.species.name} wins!`}
+    </div>
+    ${extras}
+  `;
+}
+
+function resetPvp() {
+  pvp = null;
+  document.getElementById("pvp-setup").style.display = "";
+  document.getElementById("pvp-arena").style.display = "none";
+  document.getElementById("pvp-result").style.display = "none";
+}
+
+// ══════════════════════════════════════════════════════════════════
+//  BOT FIGHT
+// ══════════════════════════════════════════════════════════════════
+
+let bot = null;
+
+function renderBotSetup() {
+  const hasSp = !!state.species;
+  document.getElementById("botNoSpecies").style.display = hasSp ? "none" : "";
+  document.getElementById("botDiffSelect").style.display = hasSp ? "" : "none";
+  document.getElementById("bot-arena").style.display = "none";
+  document.getElementById("bot-result").style.display = "none";
+  document.getElementById("bot-setup").style.display = "";
+
+  const diffs = [
+    { id:"easy",       name:"Easy",       emoji:"🧸", color:"var(--green)", desc:"Baby Bot — learn the basics" },
+    { id:"medium",     name:"Medium",     emoji:"⚔️", color:"var(--blue)",  desc:"Warrior Bot — some challenge" },
+    { id:"hard",       name:"Hard",       emoji:"👹", color:"var(--accent)", desc:"Demon Bot — test your skills" },
+    { id:"impossible", name:"Impossible", emoji:"💀", color:"var(--red)",   desc:"God Bot — highest rewards" },
+  ];
+  document.getElementById("diffGrid").innerHTML = diffs.map(d => `
+    <div class="diff-card" onclick="startBotFight('${d.id}')" style="border-color:${d.color}">
+      <div class="diff-emoji">${d.emoji}</div>
+      <div class="diff-name" style="color:${d.color}">${d.name}</div>
+      <div class="diff-desc">${d.desc}</div>
+    </div>
+  `).join("");
+}
+
+function getBotSpeciesForDiff(diff) {
+  const pool = BOT_SPECIES_BY_DIFF[diff];
+  return pool[Math.floor(Math.random() * pool.length)];
+}
+
+function startBotFight(difficulty) {
+  if (!state.species) { showToast("❌ Roll a species first!"); gotoPage("home"); return; }
+  const personality = BOT_PERSONALITIES[difficulty];
+  const botSpecName = getBotSpeciesForDiff(difficulty);
+  bot = {
+    difficulty,
+    personality,
+    player: makeCombatant(state.species.name),
+    botC: makeCombatant(botSpecName),
+    round: 1,
+    active: true,
+    pendingChoice: null,
+    botThinking: false,
+  };
+
+  document.getElementById("bot-setup").style.display = "none";
+  document.getElementById("bot-arena").style.display = "";
+  document.getElementById("bot-result").style.display = "none";
+
+  document.getElementById("botP1Emoji").textContent = state.species.emoji;
+  document.getElementById("botP1Name").textContent = `You — ${state.species.name}`;
+  document.getElementById("botP2Emoji").textContent = `${personality.emoji} ${bot.botC.species.emoji}`;
+  document.getElementById("botP2Name").textContent = `${personality.name} — ${botSpecName}`;
+
+  clearLog("botLog");
+  updateBotUI();
+  addLog("botLog", `⚔️ Fight vs ${personality.emoji} ${personality.name} (${botSpecName})!`);
+}
+
+function updateBotUI() {
+  if (!bot) return;
+  const p = bot.player, b = bot.botC;
+  updateHpBar("botP1Bar", "botP1HpText", p.currentHp, p.maxHp);
+  updateHpBar("botP2Bar", "botP2HpText", b.currentHp, b.maxHp);
+  document.getElementById("botRound").textContent = bot.round;
+
+  const canAct = bot.active && !bot.botThinking && !bot.pendingChoice;
+  const healOk = p.healCooldown === 0 && p.currentHp < p.maxHp * 0.8;
+  const ultOk = p.ultCooldown === 0;
+
+  const healBtn = document.getElementById("botHealBtn");
+  const ultBtn = document.getElementById("botUltBtn");
+  document.querySelectorAll("#botActions .btn").forEach(b2 => b2.disabled = !canAct);
+  healBtn.disabled = !canAct || !healOk;
+  ultBtn.disabled = !canAct || !ultOk;
+  healBtn.textContent = p.healCooldown > 0 ? `💚 HEAL (${p.healCooldown})` : "💚 HEAL";
+  ultBtn.textContent = p.ultCooldown > 0 ? `✨ ULT (${p.ultCooldown})` : "✨ ULT";
+
+  renderBuffs("botP1Buffs", bot.player);
+  renderBuffs("botP2Buffs", bot.botC);
+
+  const banner = document.getElementById("botTurnBanner");
+  if (!bot.active) { banner.textContent = "Fight over!"; banner.className = "turn-banner"; return; }
+  if (bot.botThinking) { banner.textContent = `🤖 ${bot.personality.emoji} ${bot.personality.name} is thinking...`; banner.className = "turn-banner thinking"; }
+  else banner.className = "turn-banner", banner.textContent = bot.pendingChoice ? "🎯 Choose your path!" : "⚔️ Your turn!";
+
+  // Choice buttons
+  const ca = document.getElementById("botChoiceActions");
+  ca.innerHTML = ""; ca.style.display = "none";
+  if (bot.pendingChoice && !bot.botThinking) {
+    ca.style.display = "flex";
+    if (bot.pendingChoice === "angel") {
+      ca.innerHTML = `<button class="btn btn-red" onclick="botChoice('angel_smite')">⚔️ Smite (1.5×+35%)</button>
+                      <button class="btn btn-green" onclick="botChoice('angel_prayer')">💚 Prayer (60%)</button>`;
+    } else if (bot.pendingChoice === "ice_dragon") {
+      ca.innerHTML = `<button class="btn btn-red" onclick="botChoice('ice_attack')">⚔️ Glacial (1.9×)</button>
+                      <button class="btn btn-green" onclick="botChoice('ice_heal')">💚 Heal +50%</button>`;
+    } else if (bot.pendingChoice === "earth_dragon") {
+      ca.innerHTML = `<button class="btn btn-red" onclick="botChoice('earth_attack')">⚔️ Terra (1.2×)</button>
+                      <button class="btn btn-blue" onclick="botChoice('earth_shield')">🛡️ Shield</button>`;
+    }
+  }
+}
+
+function botAction(action) {
+  if (!bot || !bot.active || bot.botThinking || bot.pendingChoice) return;
+  const p = bot.player, b = bot.botC;
+
+  if (action === "forfeit") { endBotFight(false, "forfeit"); return; }
+
+  // Ogre regen
+  if (p.species.name === "Ogre") { p.currentHp = Math.min(p.maxHp, p.currentHp + 5); addLog("botLog", "👹 Regeneration +5 HP"); }
+
+  // Possession
+  if (p.possession) {
+    p.possession = false;
+    const selfHit = ri(p.species.atkMin, p.species.atkMax);
+    p.currentHp = Math.max(0, p.currentHp - selfHit);
+    addLog("botLog", `🎭 POSSESSION! You attack yourself for ${selfHit}!`);
+    updateBotUI();
+    if (p.currentHp <= 0) { endBotFight(false, "normal"); return; }
+    botEndPlayerTurn();
+    return;
+  }
+
+  if (action === "attack") {
+    const result = calculateDamage(p, b);
+    p.currentHp = Math.max(0, Math.min(p.maxHp, p.currentHp + result.attackerMut.hpDelta));
+    if (result.missed) {
+      addLog("botLog", result.lines[0]);
+      if (p.currentHp <= 0) { updateBotUI(); endBotFight(false, "counter"); return; }
+    } else if (result.instantKill) {
+      b.currentHp = 0;
+      addLog("botLog", ...result.lines);
+    } else {
+      b.currentHp = Math.max(0, b.currentHp - result.damage);
+      addLog("botLog", `⚔️ You deal ${result.damage} damage!`, ...(result.lines.length ? [result.lines.slice(0,3).join(" | ")] : []));
+      // Track cyborg awakening damage
+      if (p.species.name === "Cyborg" && result.damage > 0) {
+        if (!state.awakening) state.awakening = { cyborg: {wins:0,damageDealt:0,ultUses:0,awakened:false} };
+        state.awakening.cyborg.damageDealt = Math.min(state.awakening.cyborg.damageDealt + result.damage, 500);
+      }
+    }
+    updateBotUI();
+    if (b.currentHp <= 0) { endBotFight(true, "normal"); return; }
+    if (p.currentHp <= 0) { endBotFight(false, "counter"); return; }
+    botEndPlayerTurn();
+  }
+  else if (action === "heal") {
+    if (p.healCooldown > 0 || p.currentHp >= p.maxHp * 0.8) return;
+    if (p.blockHeal) { p.blockHeal = false; addLog("botLog", "👑 ROYAL COMMAND! Can't heal!"); botEndPlayerTurn(); return; }
+    const lines = doHeal(p);
+    addLog("botLog", ...lines);
+    updateBotUI();
+    botEndPlayerTurn();
+  }
+  else if (action === "ult") {
+    if (p.ultCooldown > 0) return;
+    p.ultCooldown = p.species.ultCooldown;
+    const { msg, requiresChoice, choiceType } = applyUltEffect(p, b);
+    addLog("botLog", msg);
+    trackCyborgUlt();
+    if (b.currentHp <= 0) { updateBotUI(); endBotFight(true, "judge"); return; }
+    if (p.species.name === "Ogre") { b.stunnedTurns = 1; }
+    if (requiresChoice) { bot.pendingChoice = choiceType; updateBotUI(); return; }
+    updateBotUI();
+    botEndPlayerTurn();
+  }
+}
+
+function botChoice(choice) {
+  if (!bot || !bot.pendingChoice) return;
+  const p = bot.player, b = bot.botC;
+  bot.pendingChoice = null;
+
+  if (choice === "angel_smite") { p.ultBuff={type:"nextAttack",multiplier:1.5,angelHeal:true}; addLog("botLog","👼 SMITE — 1.5×!"); }
+  else if (choice === "angel_prayer") { const h=Math.floor(p.maxHp*0.6); p.currentHp=Math.min(p.maxHp,p.currentHp+h); addLog("botLog",`👼 PRAYER +${h} HP!`); }
+  else if (choice === "ice_attack") { p.ultBuff={type:"nextAttack",multiplier:1.9}; addLog("botLog","❄️ GLACIAL SPIKE 1.9×!"); }
+  else if (choice === "ice_heal") { const h=Math.floor(p.maxHp*0.5); p.currentHp=Math.min(p.maxHp,p.currentHp+h); addLog("botLog",`❄️ GLACIAL HEAL +${h}!`); }
+  else if (choice === "earth_attack") { p.ultBuff={type:"nextAttack",multiplier:1.2}; addLog("botLog","🌍 TERRA STRIKE 1.2×!"); }
+  else if (choice === "earth_shield") { p.ultBuff={type:"invincible"}; addLog("botLog","🌍 TERRA SHIELD — invincible!"); }
+
+  updateBotUI();
+  botEndPlayerTurn();
+}
+
+function botEndPlayerTurn() {
+  if (!bot) return;
+  const p = bot.player, b = bot.botC;
+  const burnt = applyBurnTick(b);
+  if (burnt) addLog("botLog", "Bot: " + burnt);
+  if (b.currentHp <= 0) { updateBotUI(); endBotFight(true, "normal"); return; }
+  tickCooldowns(p);
+  if (b.ultCooldown > 0) b.ultCooldown--;
+  bot.round++;
+
+  // Bot turn
+  bot.botThinking = true;
+  updateBotUI();
+  setTimeout(() => doBotAI(), bot.personality.reactionDelay);
+}
+
+function doBotAI() {
+  if (!bot || !bot.active) return;
+  const p = bot.player, b = bot.botC;
+  bot.botThinking = false;
+
+  // Ogre regen for bot
+  if (b.species.name === "Ogre") { b.currentHp = Math.min(b.maxHp, b.currentHp + 5); addLog("botLog","👹 Bot Regeneration +5"); }
+
+  const hpPctB = b.currentHp / b.maxHp;
+  let action = "attack";
+  if (b.healCooldown === 0 && hpPctB < bot.personality.healThreshold && b.currentHp < b.maxHp * 0.8) action = "heal";
+  else if (b.ultCooldown === 0 && Math.random() < bot.personality.ultChance) action = "ult";
+
+  if (action === "heal") {
+    if (b.blockHeal) { b.blockHeal = false; addLog("botLog","👑 Bot blocked from healing!"); action = "attack"; }
+    else {
+      const lines = doHeal(b);
+      addLog("botLog","Bot: "+lines[0]);
+      updateBotUI();
+      botEndBotTurn();
+      return;
+    }
+  }
+  if (action === "ult") {
+    b.ultCooldown = b.species.ultCooldown;
+    const { msg, requiresChoice, choiceType } = applyUltEffect(b, p);
+    addLog("botLog","Bot ULT: "+msg);
+    if (p.currentHp <= 0) { updateBotUI(); endBotFight(false, "judge"); return; }
+    if (requiresChoice) {
+      if (choiceType === "angel") {
+        if (b.currentHp < b.maxHp * 0.4) { const h=Math.floor(b.maxHp*0.6); b.currentHp=Math.min(b.maxHp,b.currentHp+h); addLog("botLog",`👼 Bot PRAYER +${h}`); }
+        else { b.ultBuff={type:"nextAttack",multiplier:1.5,angelHeal:true}; addLog("botLog","👼 Bot SMITE 1.5×"); }
+      } else if (choiceType === "ice_dragon") { b.ultBuff={type:"nextAttack",multiplier:1.9}; addLog("botLog","❄️ Bot Glacial 1.9×"); }
+      else if (choiceType === "earth_dragon") { b.ultBuff={type:"nextAttack",multiplier:1.2}; addLog("botLog","🌍 Bot Terra 1.2×"); }
+    }
+    if (b.species.name === "Ogre") p.stunnedTurns = 1;
+    updateBotUI();
+    botEndBotTurn();
+    return;
+  }
+  // Attack
+  const result = calculateDamage(b, p);
+  b.currentHp = Math.max(0, Math.min(b.maxHp, b.currentHp + result.attackerMut.hpDelta));
+  if (result.missed) {
+    addLog("botLog", "Bot: " + result.lines[0]);
+    if (p.species.name === "God") { const gh=Math.floor(p.currentHp*0.2); p.currentHp=Math.min(p.maxHp,p.currentHp+gh); addLog("botLog",`👑 Divine Retribution! +${gh}!`); }
+    if (b.currentHp <= 0) { updateBotUI(); endBotFight(true, "counter"); return; }
+  } else if (result.instantKill) {
+    p.currentHp = 0; addLog("botLog", ...result.lines);
+  } else {
+    p.currentHp = Math.max(0, p.currentHp - result.damage);
+    if (p.species.name === "Chimera" && result.damage > 0) p.adaptiveStacks = Math.min(3, p.adaptiveStacks + 1);
+    addLog("botLog", `⚔️ Bot deals ${result.damage}!`, ...(result.lines.slice(0,2)));
+  }
+  updateBotUI();
+  if (p.currentHp <= 0) { endBotFight(false, "normal"); return; }
+  if (b.currentHp <= 0) { endBotFight(true, "normal"); return; }
+  botEndBotTurn();
+}
+
+function botEndBotTurn() {
+  if (!bot) return;
+  const p = bot.player, b = bot.botC;
+  const burnt = applyBurnTick(p);
+  if (burnt) addLog("botLog", "You: " + burnt);
+  if (p.currentHp <= 0) { updateBotUI(); endBotFight(false, "normal"); return; }
+  tickCooldowns(b);
+  if (p.ultCooldown > 0) p.ultCooldown--;
+  bot.round++;
+  updateBotUI();
+}
+
+function endBotFight(won, reason) {
+  if (!bot || !bot.active) return;
+  bot.active = false;
+  bot.botThinking = false;
+
+  const diff = bot.difficulty;
+  let winsEarned = 0, rollEarned = false;
+  if (won) {
+    if (diff === "easy")       winsEarned = 1;
+    else if (diff === "medium"){ winsEarned = 2; if(Math.random()<0.2)rollEarned=true; }
+    else if (diff === "hard")  { winsEarned = 3; if(Math.random()<0.5)rollEarned=true; }
+    else if (diff === "impossible"){ winsEarned = 5; if(Math.random()<0.9)rollEarned=true; }
+    if (rollEarned) { state.rolls++; }
+    state.wins += 1;
+    // Cyborg awakening win tracking
+    if (state.species?.name === "Cyborg") {
+      if (!state.awakening) state.awakening = { cyborg:{wins:0,damageDealt:0,ultUses:0,awakened:false} };
+      state.awakening.cyborg.wins = Math.min(state.awakening.cyborg.wins + 1, 25);
+    }
+    updateReaperQuest(diff);
+  } else {
+    state.losses += 1;
+  }
+
+  if (!state.botStats) state.botStats = { easy:{wins:0,losses:0}, medium:{wins:0,losses:0}, hard:{wins:0,losses:0}, impossible:{wins:0,losses:0} };
+  if (!state.botStats[diff]) state.botStats[diff] = {wins:0,losses:0};
+  state.botStats[diff][won ? "wins" : "losses"]++;
+
+  state.history.unshift({ vs: bot.botC.species.name, won, reason, isBotFight:true, difficulty:diff, date: Date.now() });
+  state.history = state.history.slice(0, 20);
+  saveState();
+
+  document.getElementById("bot-arena").style.display = "none";
+  document.getElementById("bot-result").style.display = "";
+
+  const personality = bot.personality;
+  const ico = won ? "🏆" : "💀";
+  const col = won ? "var(--green)" : "var(--red)";
+  const title = won ? `Defeated ${personality.emoji} ${personality.name}!` : `Lost to ${personality.emoji} ${personality.name}!`;
+  let extras = "";
+  if (winsEarned > 0) extras += `<div style="color:var(--gold)">+${winsEarned} win${winsEarned!==1?"s":""}!</div>`;
+  if (rollEarned) extras += `<div style="color:var(--gold)">🎲 +1 Species Roll!</div>`;
+  if (reason === "forfeit") extras += `<div style="color:var(--muted)">😵 Forfeited</div>`;
+
+  document.getElementById("botResultContent").innerHTML = `
+    <span class="result-icon">${ico}</span>
+    <div class="result-title" style="color:${col}">${title}</div>
+    <div class="result-detail">${state.species?.emoji||""} ${state.species?.name||""} vs ${bot.botC.species.emoji} ${bot.botC.species.name}</div>
+    ${extras}
+  `;
+}
+
+function resetBot() {
+  bot = null;
+  renderBotSetup();
+}
+
+function updateReaperQuest(type) {
+  if (!state.questProgress) state.questProgress = { easyBots:0, mediumBots:0, hardBots:0, impossibleBots:0, playerFights:0, completed:false, claimed:false };
+  const q = state.questProgress;
+  if (q.completed) return;
+  if (type === "easy")       q.easyBots       = Math.min(q.easyBots+1, 35);
+  else if (type === "medium") q.mediumBots    = Math.min(q.mediumBots+1, 25);
+  else if (type === "hard")   q.hardBots      = Math.min(q.hardBots+1, 15);
+  else if (type === "impossible") q.impossibleBots = Math.min(q.impossibleBots+1, 5);
+  else if (type === "player") q.playerFights  = Math.min(q.playerFights+1, 15);
+  if (q.easyBots>=35 && q.mediumBots>=25 && q.hardBots>=15 && q.impossibleBots>=5 && q.playerFights>=15)
+    q.completed = true;
+}
+
+function trackCyborgUlt() {
+  if (state.species?.name === "Cyborg") {
+    if (!state.awakening) state.awakening = { cyborg:{wins:0,damageDealt:0,ultUses:0,awakened:false} };
+    state.awakening.cyborg.ultUses = Math.min(state.awakening.cyborg.ultUses + 1, 15);
+  }
+}
+
+// ══════════════════════════════════════════════════════════════════
+//  PROFILE
+// ══════════════════════════════════════════════════════════════════
+
+function renderProfile() {
+  const total = state.wins + state.losses;
+  const wr = total > 0 ? Math.round((state.wins / total) * 100) : 0;
+  document.getElementById("profileStats").innerHTML = `
+    <div class="stat-box"><div class="stat-num">${state.wins}</div><div class="stat-lbl">Wins</div></div>
+    <div class="stat-box"><div class="stat-num">${state.losses}</div><div class="stat-lbl">Losses</div></div>
+    <div class="stat-box"><div class="stat-num">${wr}%</div><div class="stat-lbl">Win Rate</div></div>
+    <div class="stat-box"><div class="stat-num">${state.streak}</div><div class="stat-lbl">Streak</div></div>
+    <div class="stat-box"><div class="stat-num">${state.rolls}</div><div class="stat-lbl">Rolls</div></div>
+    <div class="stat-box"><div class="stat-num">${state.species?.name||"—"}</div><div class="stat-lbl">Species</div></div>
+  `;
+
+  // Bot stats
+  const bs = state.botStats || {};
+  document.getElementById("botStatsGrid").innerHTML = ["easy","medium","hard","impossible"].map(d => {
+    const s = bs[d] || {wins:0, losses:0};
+    const p = BOT_PERSONALITIES[d];
+    return `<div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--border);font-size:0.9rem">
+      <span>${p.emoji} ${p.name}</span>
+      <span style="color:var(--green)">${s.wins}W</span>
+      <span style="color:var(--red)">${s.losses}L</span>
+    </div>`;
+  }).join("");
+
+  // Fight history
+  const hist = (state.history || []).slice(0, 10);
+  document.getElementById("fightHistory").innerHTML = hist.length ? hist.map(h => {
+    const ago = timeSince(h.date);
+    return `<div class="lb-row" style="font-size:0.85rem">
+      <span style="font-size:1.1rem">${h.won?"🏆":"💀"}</span>
+      <span class="lb-name">vs ${h.vs}${h.isBotFight?" (Bot)":""}</span>
+      <span style="color:var(--muted)">${ago}</span>
+    </div>`;
+  }).join("") : "<div style='color:var(--muted);font-size:0.9rem'>No fights yet</div>";
+
+  // Reaper quest
+  const q = state.questProgress || {};
+  const qLines = [
+    { label:"Easy Bot Wins", cur: q.easyBots||0, req:35 },
+    { label:"Medium Bot Wins", cur: q.mediumBots||0, req:25 },
+    { label:"Hard Bot Wins", cur: q.hardBots||0, req:15 },
+    { label:"Impossible Bot Wins", cur: q.impossibleBots||0, req:5 },
+    { label:"Player Fights Won", cur: q.playerFights||0, req:15 },
+  ];
+  document.getElementById("reaperQuestContent").innerHTML = qLines.map(ql => `
+    <div style="margin-bottom:6px">
+      <div style="display:flex;justify-content:space-between;font-size:0.85rem;margin-bottom:3px">
+        <span>${ql.label}</span><span style="color:var(--gold)">${ql.cur}/${ql.req}</span>
+      </div>
+      <div class="hp-bar-outer">
+        <div class="hp-bar-inner ${ql.cur >= ql.req ? 'high' : 'mid'}" style="width:${Math.min(100,Math.round(ql.cur/ql.req*100))}%"></div>
+      </div>
+    </div>
+  `).join("") + (q.completed ? `<div style="color:var(--gold);margin-top:8px;font-family:'Cinzel Decorative',serif">✅ QUEST COMPLETE!</div>` : "");
+
+  // Cyborg awakening progress
+  if (state.species?.name === "Cyborg" && state.awakening?.cyborg) {
+    const awk = state.awakening.cyborg;
+    const req = { wins:25, damageDealt:500, ultUses:15 };
+    const awkLines = [
+      { label:"Wins", cur:awk.wins, req:req.wins },
+      { label:"Damage Dealt", cur:awk.damageDealt, req:req.damageDealt },
+      { label:"ULT Uses", cur:awk.ultUses, req:req.ultUses },
+    ];
+    document.getElementById("reaperQuestContent").innerHTML += `
+      <div style="margin-top:12px;border-top:1px solid var(--border);padding-top:10px">
+        <div style="color:var(--cyan);font-family:'Cinzel Decorative',serif;font-size:0.8rem;margin-bottom:8px">⚡ CYBORG AWAKENING</div>
+        ${awkLines.map(al => `
+          <div style="margin-bottom:6px">
+            <div style="display:flex;justify-content:space-between;font-size:0.85rem;margin-bottom:3px">
+              <span>${al.label}</span><span style="color:var(--cyan)">${al.cur}/${al.req}</span>
+            </div>
+            <div class="hp-bar-outer"><div class="hp-bar-inner ${al.cur>=al.req?"high":"mid"}" style="width:${Math.min(100,Math.round(al.cur/al.req*100))}%"></div></div>
+          </div>
+        `).join("")}
+      </div>
+    `;
+  }
+}
+
+function timeSince(ts) {
+  const diff = Date.now() - ts;
+  const mins = Math.floor(diff/60000);
+  if (mins < 1) return "just now";
+  if (mins < 60) return `${mins}m ago`;
+  const hrs = Math.floor(mins/60);
+  if (hrs < 24) return `${hrs}h ago`;
+  return `${Math.floor(hrs/24)}d ago`;
+}
+
+// ══════════════════════════════════════════════════════════════════
+//  PATCH NOTES
+// ══════════════════════════════════════════════════════════════════
+
+function renderPatch() {
+  document.getElementById("patchContent").innerHTML = PATCH_NOTES.map(p => `
+    <div class="card">
+      <div class="patch-version">v${p.version}</div>
+      <div class="patch-date">${p.date}</div>
+      <ul class="patch-changes">
+        ${p.changes.map(c => `<li>${c}</li>`).join("")}
+      </ul>
+    </div>
+  `).join("");
+}
+
+// ══════════════════════════════════════════════════════════════════
+//  PARTICLES
+// ══════════════════════════════════════════════════════════════════
+
+function createParticles() {
+  const container = document.getElementById("particles");
+  const colors = ["#d4af37","#ff4500","#9b59b6","#00ffff","#3498db","#2ecc71"];
+  for (let i = 0; i < 20; i++) {
+    const div = document.createElement("div");
+    div.className = "particle";
+    const size = Math.random() * 4 + 1;
+    div.style.cssText = `
+      width:${size}px; height:${size}px;
+      left:${Math.random()*100}%;
+      background:${colors[Math.floor(Math.random()*colors.length)]};
+      animation-duration:${Math.random()*15+10}s;
+      animation-delay:${Math.random()*10}s;
+    `;
+    container.appendChild(div);
+  }
+}
+
+// ══════════════════════════════════════════════════════════════════
+//  INIT
+// ══════════════════════════════════════════════════════════════════
+
+loadState();
+createParticles();
+initPvpSpeciesGrid();
+renderHome();
+
+// Close modal on overlay click
+document.getElementById("speciesModal").addEventListener("click", e => {
+  if (e.target === e.currentTarget) closeModal();
+});
+document.getElementById("rollModal").addEventListener("click", e => {
+  if (e.target === e.currentTarget) document.getElementById("rollModal").classList.add("hidden");
+});
+</script>
+</body>
+</html>
